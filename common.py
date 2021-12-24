@@ -10,6 +10,7 @@ mais ne doit inclure aucun fichier, sauf les imports de bibliothèques.
 
 # Imports des bibliothèques
 import pygame
+import socket
 import sys
 
 # Initialisation des modules
@@ -22,6 +23,6 @@ pygame.font.init()
 # du package pygame.display par la suite.
 
 # Taille de l'écran
-screen_size = (1080, 720)
+screen_size = (768, 640)
 # Création de l'écran
 screen = pygame.display.set_mode(screen_size)
