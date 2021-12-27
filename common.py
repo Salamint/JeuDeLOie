@@ -9,6 +9,7 @@ mais ne doit inclure aucun fichier, sauf les imports de bibliothèques.
 """
 
 # Imports des bibliothèques
+import json
 import pygame
 import socket
 import sys

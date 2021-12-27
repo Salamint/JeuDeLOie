@@ -15,11 +15,11 @@ import multiplayer
 # variables globales de signature (version, auteurs, license, droits...)
 
 # Nom du jeu
-__title__ = "jeu de l'oie"
+__title__ = "Jeu de l'oie"
 # Auteurs du jeu
 __authors__ = []
 # License du jeu
-__license__ = "GPL 3.0"
+__license__ = "MIT License"
 # Version du jeu
 __version__ = "0.0.0"
 
@@ -59,12 +59,19 @@ class Application:
         self.running = True
 
         # Change le titre de l'application
-        pygame.display.set_caption("Titled Goose Game")
+        pygame.display.set_caption(__title__)
         # Change l'icone de l'application
         pygame.display.set_icon(pygame.image.load("assets/goose.png").convert_alpha())
 
         self.board = board.Board.defaut(6, 4)
         self.clock = pygame.time.Clock()
+
+    def display(self):
+        """
+        Met à jour l'affichage (affiche sur l'écran tous les groupes de sprites et sprites).
+        """
+        self.board.display()
+        self.screen.blit(self.board.surface, (0, 96))
 
     def quit(self):
         """
@@ -97,8 +104,8 @@ class Application:
         # Tant que le jeu est lancé (un tour de boucle par frame)
         while self.running:
 
-            # Affihe le plateau de jeu sur l'écran aux coordonnées indiquées
-            self.screen.blit(self.board.display(), (0, 96))
+            # Met à jour l'affichage
+            self.display()
             # Met à jour tous les écrans de pygame
             pygame.display.flip()
             

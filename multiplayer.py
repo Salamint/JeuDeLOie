@@ -73,6 +73,10 @@ class Socket(socket.socket):
         """
         return self.address, self.port
     
+    def is_used(self) -> bool:
+        """"""
+        return self.type != Socket.UNUSED
+    
     def set_client(self, address: str, port: int = None):
         """
         Marque ce socket comme utilisé en tant que serveur, et envoie une demande de connexion
