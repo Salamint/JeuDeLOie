@@ -49,13 +49,15 @@ class Board:
         """
         self.surface = surface
         self.width, self.height = size
+        self.size = self.width * self.height
 
         self.tiles = pygame.sprite.Group()
         self.geese = pygame.sprite.Group()
     
     def __getstate__(self) -> dict:
         """"""
-        return {}
+        state = {}
+        return state
     
     def __setstate__(self, state: dict):
         """"""
@@ -66,12 +68,11 @@ class Board:
     
     def add_tile(self, image: str, action: callable):
         """"""
-        tile = Tile(self, image, self.get_next_tile(), action)
+        tile = Tile(self, image, self.get_tile(), action)
         tile.image.blit(
-            pygame.font.SysFont("consolas", 25).render(f"{len(self.tiles)}", True, (255, 255, 255)),
+            pygame.font.SysFont("consolas", 25).render(f"{len(self.tiles) + 1}", True, (255, 255, 255)),
             (24, 24)
         )
-        print(len(self.tiles), tile.rect)
         self.tiles.add(tile)
     
     def display(self) -> pygame.Surface:
@@ -80,37 +81,39 @@ class Board:
         self.geese.draw(self.surface)
         return self.surface
     
-    def get_next_tile(self) -> list[int] or tuple[int]:
+    def get_tile(self, position: int = None) -> list[int] or tuple[int]:
         """
         Retourne les coordonnées de l'emplacement de la prochaine tuile,
         sert à créer une spirale.
         """
-        tile_number = len(self.tiles)
 
-        def spiral(width: int, height: int, left_tiles: int = None, padding_left: int = 0, padding_top: int = 0):
+        def spiral(width: int, height: int, left_tiles: int = None, padding: int = 0):
             
             if left_tiles == None:
-                left_tiles = tile_number
+                left_tiles = len(self.tiles) + 1
 
-            if left_tiles > width - 1:
+            if left_tiles > width:
                 left_tiles -= width
 
                 if left_tiles > height - 1:
-                    left_tiles -= height
+                    left_tiles -= height - 1
 
                     if left_tiles > width - 1:
                         left_tiles -= width - 1
-                        
-                        if left_tiles > height - 1:
-                            return spiral(width - 1, height - 1, padding_left + 1, padding_top + 1)
-                        return 0, height - left_tiles
-                    return width - left_tiles + padding_left, height - 1 + padding_top
-                return width - 1 + padding_left, left_tiles + padding_top
-            return left_tiles + padding_left, padding_top
 
-        spiral = spiral(self.width, self.height)
-        print(spiral)
-        return spiral
+                        if left_tiles > height - 2:
+                            return spiral(width - 2, height - 2, left_tiles - 2, padding + 1)
+                        
+                        return padding, height - left_tiles - 1 + padding
+                    return width - 1 - left_tiles + padding, height - 1 + padding
+                return width - 1 + padding, left_tiles + padding
+            return left_tiles - 1 + padding, padding
+
+        return spiral(self.width, self.height, position)
+    
+    def update(self, event: pygame.event.Event):
+        self.tiles.update()
+        self.geese.update(event)
 
 
 class GooseAction:

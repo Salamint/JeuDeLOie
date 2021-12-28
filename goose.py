@@ -31,11 +31,34 @@ class Goose(pygame.sprite.Sprite):
         self.rect.x = 32
         self.rect.y = 32
 
-        self.position = 0
+        self.position = 1
         self.score = 0
     
-    def forward(self, tiles: int):
+    def goto(self, tile: int):
+        if 1 <= tile <= self.board.size:
+            self.position = tile
+    
+    def move_forward(self, tiles: int):
         """
         Fait avancer l'oie d'un certain nombre de tuiles.
         `tiles`: Un entier, le nombre de tuile sur lequelles
         """
+        self.goto(self.position + tiles)
+    
+    def move_back(self, tiles: int):
+        self.goto(self.position - tiles)
+    
+    def update(self, event: pygame.event.Event):
+        
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_LEFT:
+                self.move_back(1)
+            elif event.key == pygame.K_RIGHT:
+                self.move_forward(1)
+        
+        self.update_rect()
+
+    def update_rect(self):
+        coordinates = self.board.get_tile(self.position)
+        self.rect.x = 32 + 128 * coordinates[0]
+        self.rect.y = 32 + 128 * coordinates[1]

@@ -111,6 +111,9 @@ class Application:
             
             # Capture tous les évènements (click, appuit sur une touche...) de la frame actuelle
             for event in pygame.event.get():
+
+                # Met à jour le jeu
+                self.update(event)
                 
                 # Si l'évènment est celui de cliquer sur la croix
                 if event.type == pygame.QUIT:
@@ -119,7 +122,9 @@ class Application:
             
             # Régule le jeu à 60 fps
             self.clock.tick(60)
-
+    
+    def update(self, event: pygame.event.Event):
+        self.board.update(event)
 
 
 # Vérifie si ce fichier n'est pas importé
