@@ -15,7 +15,7 @@ import player
 
 class Game:
     """
-    Un classe représentant le jeu, elle se différencie par son utilisation et ses attributs :
+    Une classe représentant le jeu, elle se différencie par son utilisation et ses attributs :
     La classe Application gère le jeu et les composants graphiques de base (fenêtre),
     ainsi que d'autres choses diverses qui n'ont pas de rapport avec la classe Game.
     """
@@ -23,7 +23,7 @@ class Game:
     def __init__(self, app):
         self.app = app
 
-        self.board = board.Board.defaut(8, 8)
+        self.board = board.Board.default(8, 8)
         self.gameplay = multiplayer.SAME_MACHINE
         self.geese = pygame.sprite.Group()
         self.players: list[player.Player] = []

@@ -1,6 +1,6 @@
 """
 Ce fichier permet de connecter plusieurs ordinateurs
-ensembles pour permettre de jouer à plusieur au même jeu.
+ensembles pour permettre de jouer à plusieurs au même jeu.
 """
 
 # Import de 'common.py'
@@ -28,14 +28,14 @@ class Socket(socket.socket):
      - Le protocole pour l'échange (SOCK_DGRAM pour
     le protocole UDP, SOCK_STREAM pour le protocole TCP).
 
-    La différence entre les protocoles TCP (Transmission Control Protocl)
+    La différence entre les protocoles TCP (Transmission Control Protocol)
     et UDP (User Datagram Protocol) est que le protocole UDP demande moins d'informations
     mais ne demande aucune confirmation de réception, et peut donc envoyer les paquets
     dans le désordre, et les paquets perdus ne seront pas réenvoyés, contrairement
     au protocole TCP.
     """
 
-    # Constantes permettant de fifférencier les sockets clients, serveurs et inutilisés
+    # Constantes permettant de différencier les sockets clients, serveurs et inutilisés
     UNUSED = 0
     SERVER = 1
     CLIENT = 2
@@ -47,7 +47,7 @@ class Socket(socket.socket):
 
     def __init__(self, address: str = None, port: int = None):
         """
-        Les variables `host` et `port` ont dees valeurs par défaut,
+        Les variables `host` et `port` ont des valeurs par défaut,
         il est conseillé de laisser la variable port par défaut, toutefois,
         si et seulement si le socket est un socket client, le paramètre `host`
         doit être changé. 
@@ -85,10 +85,10 @@ class Socket(socket.socket):
     
     def set_client(self, address: str, port: int = None):
         """
-        Marque ce socket comme utilisé en tant que serveur, et envoie une demande de connexion
+        Marque ce socket comme utilisé en tant que serveur,et envoie une demande de connexion
         à un serveur.
         `address`: L'adresse du serveur (IPv4).
-        `port`: Le port du serveur (valeur par défaut: Socket.PORT).
+        `port`: Le port du serveur (valeur par défaut : Socket.PORT).
         """
 
         # Lorsque le socket est déjà en cours d'utilisation, lève une erreur
@@ -105,7 +105,7 @@ class Socket(socket.socket):
     
     def set_server(self, clients: int):
         """
-        Marque ce socket comme utilisé en tant que serveur, et attend la demande de connexion
+        Marque ce socket comme utilisé en tant que serveur,et attend la demande de connexion
         de clients.
         `clients`: Un entier, correspond au nombre maximum de client qui peut se connecter.
         """

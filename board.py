@@ -1,20 +1,20 @@
 """
 Ce fichier contient toutes les définitions de classe et de fonctions
-en rapport avec le plateu de jeu.
+en rapport avec le plateau de jeu.
 """
 
 # Import de 'common.py'
 from common import *
 
 
-# Définition dess fonctions
+# Définition des fonctions
 
-def spiral(width: int, height: int, left_tiles: int, padding: int = 0) -> tuple[int]:
+def spiral(width: int, height: int, left_tiles: int, padding: int = 0) -> tuple[int, int]:
     """
     Un algorithme permettant de créer une spirale.
     """
 
-    if left_tiles > width:
+    if left_tiles - 1 > width:
         left_tiles -= width
 
         if left_tiles > height - 1:
@@ -54,7 +54,7 @@ class Board:
         return board
     
     @staticmethod
-    def defaut(width, height):
+    def default(width, height):
         board = Board(
             pygame.Surface(Tile.get_size(width, height), pygame.SRCALPHA),
             (width, height)
@@ -67,9 +67,9 @@ class Board:
     def __init__(self, surface: pygame.Surface, size: tuple[int] or list[int]):
         """
         Construit un objet Board avec les tuiles du plateau en paramètre.
-        `size`: Définit la taille du plateau de jeu, en donnant le nombre de tuile
-        en hauteur et en largeur, et une tuile a une taillepar défaut de 128px par 128px.
-        `tiles`: Les tuiles déjà chargés sont fournies en argument.
+        `size`: Définit la taille du plateau de jeu, en donnant le nombre de tuiles
+        en hauteur et en largeur, et une tuile a une taille par défaut de 128 px par 128 px.
+        `tiles`: Les tuiles déjà chargées sont fournies en argument.
         """
         self.surface = surface
         self.width, self.height = size
@@ -98,11 +98,11 @@ class Board:
         )
         self.tiles.add(tile)
     
-    def display(self) -> pygame.Surface:
+    def display(self):
         """"""
         self.tiles.draw(self.surface)
     
-    def get_coordinates(self, position: int = None) -> tuple[int]:
+    def get_coordinates(self, position: int = None) -> tuple[int, int]:
         """
         Retourne les coordonnées de l'emplacement de la prochaine tuile,
         sert à créer une spirale.

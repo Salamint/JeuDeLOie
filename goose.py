@@ -52,7 +52,7 @@ class Goose(pygame.sprite.Sprite):
     
     def move_forward(self, tiles: int):
         """
-        Fait avancer l'oie d'un certain nombre de case.
+        Fait avancer l'oie d'un certain nombre de cases.
         """
         self.goto(self.position + tiles)
     
@@ -71,7 +71,7 @@ class Goose(pygame.sprite.Sprite):
 
     def update_rect(self):
         """
-        Met à jour uniquement les rectangle de l'oie (placement), ces modifications sont assez nombreuses
+        Met à jour uniquement le rectangle de l'oie (placement), ces modifications sont assez nombreuses
         et spécifiques, elles ont donc été placés dans une méthode à part de la méthode update.
         """
         coordinates = self.player.game.board.get_coordinates(self.position)
