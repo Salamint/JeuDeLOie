@@ -7,9 +7,7 @@ Ceci est un projet de NSI pour classe de Seconde Générale.
 from common import *
 
 # Import des autres fichiers
-import board
-import goose
-import multiplayer
+import game
 
 
 # variables globales de signature (version, auteurs, license, droits...)
@@ -63,15 +61,14 @@ class Application:
         # Change l'icone de l'application
         pygame.display.set_icon(pygame.image.load("assets/goose.png").convert_alpha())
 
-        self.board = board.Board.defaut(6, 4)
         self.clock = pygame.time.Clock()
+        self.game = game.Game(self)
 
     def display(self):
         """
         Met à jour l'affichage (affiche sur l'écran tous les groupes de sprites et sprites).
         """
-        self.board.display()
-        self.screen.blit(self.board.surface, (0, 96))
+        self.game.display()
 
     def quit(self):
         """
@@ -124,7 +121,7 @@ class Application:
             self.clock.tick(60)
     
     def update(self, event: pygame.event.Event):
-        self.board.update(event)
+        self.game.update(event)
 
 
 # Vérifie si ce fichier n'est pas importé

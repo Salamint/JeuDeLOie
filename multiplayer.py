@@ -7,6 +7,12 @@ ensembles pour permettre de jouer à plusieur au même jeu.
 from common import *
 
 
+# Définition des constantes
+
+SAME_MACHINE = 0
+LOCAL_AREA_NETWORK = 1
+
+
 # Définition des classes
 
 class Socket(socket.socket):
