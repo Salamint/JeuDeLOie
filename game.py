@@ -31,6 +31,7 @@ class Game:
 
         self.add_player((255, 255, 255))
         self.add_player((255, 255, 255))
+        self.stats = pygame.Surface(())
     
     def add_player(self, color: list[int] or tuple[int]):
         """
@@ -51,6 +52,7 @@ class Game:
         """
         self.board.display()
         self.geese.draw(self.board.surface)
+        self.app.screen.blit()
         self.app.screen.blit(self.board.surface, (0, 96))
     
     def next_turn(self):

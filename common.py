@@ -14,6 +14,7 @@ import pygame
 import random
 import socket
 import sys
+import time
 
 
 # Initialisation des modules
