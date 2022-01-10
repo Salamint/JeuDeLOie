@@ -7,9 +7,7 @@ Ceci est un projet de NSI pour classe de Seconde Générale.
 from common import *
 
 # Import des autres fichiers
-import board
-import goose
-import multiplayer
+import game
 
 
 # variables globales de signature (version, auteurs, license, droits...)
@@ -24,7 +22,7 @@ __license__ = "MIT License"
 __version__ = "0.0.0"
 
 
-# Défintion des fonctions
+# Définition des fonctions
 
 def main():
     """
@@ -63,21 +61,20 @@ class Application:
         # Change l'icone de l'application
         pygame.display.set_icon(pygame.image.load("assets/goose.png").convert_alpha())
 
-        self.board = board.Board.defaut(6, 4)
         self.clock = pygame.time.Clock()
+        self.game = game.Game(self)
 
     def display(self):
         """
         Met à jour l'affichage (affiche sur l'écran tous les groupes de sprites et sprites).
         """
-        self.board.display()
-        self.screen.blit(self.board.surface, (0, 96))
+        self.game.display()
 
     def quit(self):
         """
         Quitte le jeu.
 
-        Met la variable `self.running` sur False pour staopper la boucle du jeu. Cette méthode peut être
+        Met la variable `self.running` sur False pour stopper la boucle du jeu. Cette méthode peut être
         appelée à n'importe quel endroit du code.
         """
         self.running = False
@@ -86,7 +83,7 @@ class Application:
         """
         Lance la boucle du jeu.
         Le jeu tourne à 60 fps (frame per second), et chaque tour de boucle correspond à une frame.
-        Donc pendant l'éxecution du jeu, il y aura 60 tours de boucle en moyenne chaque seconde.
+        Donc pendant execution du jeu, il y aura 60 tours de boucle en moyenne chaque seconde.
         
         La variable `self.running` n'est pas une variable locale donc le programme peut être arrêté
         à n'importe quel moment, mais il est recommandé d'utiliser la méthode `self.quit`.
@@ -96,8 +93,8 @@ class Application:
         et enfin on met à jour tous les composants pour chaque évènement récupéré.
 
         L'appel à la méthode `self.clock.tick(60)` permet de régler le jeu sur 60 fps,
-        sans cet appel, le jeu dépasserait les 60 fps, donc la boucle s'éxecuterait plus de 60
-        fois par secondes. Cela peut causer des ralentissements, épuiser les ressources de la machines,
+        sans cet appel, le jeu dépasserait les 60 fps, donc la boucle s'exécuterait plus de 60
+        fois par secondes. Cela peut causer des ralentissements, épuiser les ressources de la machine,
         ainsi que créer des décalages entre différentes machines.
         """
 
@@ -109,17 +106,22 @@ class Application:
             # Met à jour tous les écrans de pygame
             pygame.display.flip()
             
-            # Capture tous les évènements (click, appuit sur une touche...) de la frame actuelle
+            # Capture tous les évènements (click, appui sur une touche...) de la frame actuelle
             for event in pygame.event.get():
+
+                # Met à jour le jeu
+                self.update(event)
                 
-                # Si l'évènment est celui de cliquer sur la croix
+                # Si l'évènement est celui de cliquer sur la croix
                 if event.type == pygame.QUIT:
                     # Fermer le jeu
                     self.quit()
             
             # Régule le jeu à 60 fps
-            self.clock.tick(60)
-
+            self.clock.tick(144)
+    
+    def update(self, event: pygame.event.Event):
+        self.game.update(event)
 
 
 # Vérifie si ce fichier n'est pas importé
