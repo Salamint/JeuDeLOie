@@ -68,6 +68,7 @@ class Application:
         """
         Met à jour l'affichage (affiche sur l'écran tous les groupes de sprites et sprites).
         """
+        self.screen.fill((0, 0, 0))
         self.game.display()
 
     def quit(self):

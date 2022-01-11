@@ -9,6 +9,7 @@ mais ne doit inclure aucun fichier, sauf les imports de bibliothèques.
 """
 
 # Imports des bibliothèques
+import abc
 import json
 import pygame
 import random
@@ -43,8 +44,22 @@ geese_colors = [
     (128, 128, 255)
 ]
 
+font = pygame.font.SysFont("consolas", 20)
+
 
 # Définition des fonctions
 
 def roll_dice():
     return random.randint(1, 6)
+
+
+# Définition des classes et interfaces
+
+
+class ITask(abc.ABC):
+
+    @abc.abstractmethod
+    def display(self): ...
+
+    @abc.abstractmethod
+    def update(self, event: pygame.event.Event): ...
