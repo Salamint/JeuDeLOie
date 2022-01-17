@@ -30,7 +30,7 @@ def spiral(width: int, height: int, left_tiles: int, padding: int = 0) -> tuple[
                 return padding, height - left_tiles - 1 + padding
             return width - 1 - left_tiles + padding, height - 1 + padding
         return width - 1 + padding, left_tiles + padding
-    return left_tiles + padding, padding
+    return left_tiles - 1 + padding, padding
 
 
 # Définition des classes
