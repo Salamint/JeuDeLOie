@@ -13,11 +13,14 @@ import player
 
 # Définition des classes
 
-class Game:
+class Game(ITask):
     """
     Une classe représentant le jeu, elle se différencie par son utilisation et ses attributs :
     La classe Application gère le jeu et les composants graphiques de base (fenêtre),
     ainsi que d'autres choses diverses qui n'ont pas de rapport avec la classe Game.
+
+    Elle implémente la classe abstraite/interface ITask, et implémente donc les méthodes
+    display et update.
     """
 
     def __init__(self, app):
@@ -28,6 +31,7 @@ class Game:
         self.geese = pygame.sprite.Group()
         self.players: list[player.Player] = []
         self.turn = 0
+        self.start_time = time.time()
 
         self.add_player((255, 255, 255))
         self.add_player((255, 255, 255))
@@ -53,7 +57,13 @@ class Game:
         self.board.display()
         self.geese.draw(self.board.surface)
 
-        self.stats.blit(font.render("Vous jouez depuis : 00h00m00s", True, (255, 255, 255)), (0, 0))
+        current_time = time.localtime(time.time() - self.start_time)
+        self.stats.blit(
+            font.render(
+                time.strftime("Vous jouez depuis : %H:%M:%S:", current_time),
+                True, color=(255, 255, 255), background=(0, 0, 0)
+            ), (0, 0)
+        )
 
         self.app.screen.blit(self.stats, (0, 608))
         self.app.screen.blit(self.board.surface, (0, 96))
