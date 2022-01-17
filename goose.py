@@ -36,6 +36,7 @@ class Goose(pygame.sprite.Sprite):
         self.rect.y = 32
 
         self.position = 0
+        self.last_position = 0
         self.score = 0
     
     def goto(self, tile: int):
@@ -43,6 +44,7 @@ class Goose(pygame.sprite.Sprite):
         Déplace l'oie sur une case en particulier.
         """
         if 0 <= tile <= self.player.game.board.size:
+            self.last_position = self.position
             self.position = tile
     
     def move_back(self, tiles: int):
