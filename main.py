@@ -62,14 +62,14 @@ class Application:
         pygame.display.set_icon(pygame.image.load("assets/goose.png").convert_alpha())
 
         self.clock = pygame.time.Clock()
-        self.game = game.Game(self)
+        self.task = game.Game(self)
 
     def display(self):
         """
         Met à jour l'affichage (affiche sur l'écran tous les groupes de sprites et sprites).
         """
         self.screen.fill((0, 0, 0))
-        self.game.display()
+        self.task.display()
 
     def quit(self):
         """
@@ -122,7 +122,7 @@ class Application:
             self.clock.tick(144)
     
     def update(self, event: pygame.event.Event):
-        self.game.update(event)
+        self.task.update(event)
 
 
 # Vérifie si ce fichier n'est pas importé
