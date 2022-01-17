@@ -13,6 +13,22 @@ import player
 
 # Définition des classes
 
+class Dice(pygame.sprite.Sprite):
+
+    def __init__(self):
+
+        super().__init__()
+
+    def roll(self):
+        ...
+
+    def update(self, event: pygame.event.Event):
+
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_SPACE:
+                ...
+
+
 class Game:
     """
     Une classe représentant le jeu, elle se différencie par son utilisation et ses attributs :
@@ -29,7 +45,6 @@ class Game:
         self.players: list[player.Player] = []
         self.turn = 0
 
-        self.add_player((255, 255, 255))
         self.add_player((255, 255, 255))
         self.stats = pygame.Surface((screen_size[0], 32))
     
