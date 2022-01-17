@@ -1,11 +1,36 @@
 """
 Ce fichier contient toutes les définitions de classe et de fonctions
-en rapport avec le plateu de jeu.
+en rapport avec le plateau de jeu.
 """
 
 # Import de 'common.py'
 from common import *
-import goose
+
+
+# Définition des fonctions
+
+def spiral(width: int, height: int, left_tiles: int, padding: int = 0) -> tuple[int, int]:
+    """
+    Un algorithme permettant de créer une spirale.
+    """
+
+    if left_tiles > width:
+        left_tiles -= width
+
+        if left_tiles > height - 1:
+            left_tiles -= height - 1
+
+            if left_tiles > width - 1:
+                left_tiles -= width - 1
+
+                if left_tiles > height - 2:
+                    left_tiles -= height - 2
+
+                    return spiral(width - 2, height - 2, left_tiles, padding + 1)
+                return padding, height - left_tiles - 1 + padding
+            return width - 1 - left_tiles + padding, height - 1 + padding
+        return width - 1 + padding, left_tiles + padding
+    return left_tiles - 1 + padding, padding
 
 
 # Définition des classes
@@ -29,88 +54,69 @@ class Board:
         return board
     
     @staticmethod
-    def defaut(width, height):
+    def default(width, height):
         board = Board(
             pygame.Surface(Tile.get_size(width, height), pygame.SRCALPHA),
             (width, height)
         )
         for x in range(width):
             for y in range(height):
-                board.add_tile("assets/tiles/tile.png", lambda: print("action!"))
-        board.add_goose((0, 200, 0))
+                board.add_tile("assets/tiles/default64.png", lambda: print("action!"))
         return board
     
     def __init__(self, surface: pygame.Surface, size: tuple[int] or list[int]):
         """
         Construit un objet Board avec les tuiles du plateau en paramètre.
-        `size`: Définit la taille du plateau de jeu, en donnant le nombre de tuile
-        en hauteur et en largeur, et une tuile a une taillepar défaut de 128px par 128px.
-        `tiles`: Les tuiles déjà chargés sont fournies en argument.
+        `size`: Définit la taille du plateau de jeu, en donnant le nombre de tuiles
+        en hauteur et en largeur, et une tuile a une taille par défaut de 128 px par 128 px.
+        `tiles`: Les tuiles déjà chargées sont fournies en argument.
         """
         self.surface = surface
         self.width, self.height = size
+        self.size = self.width * self.height
 
         self.tiles = pygame.sprite.Group()
-        self.geese = pygame.sprite.Group()
     
     def __getstate__(self) -> dict:
         """"""
-        return {}
+        state = {
+            'size': (self.width, self.height)
+        }
+        return state
     
     def __setstate__(self, state: dict):
         """"""
-    
-    def add_goose(self, color: list[int] or tuple[int]):
-        """"""
-        self.geese.add(goose.Goose(self, color))
+        self.size = state['size']
+        self.width, self.height = self.size
     
     def add_tile(self, image: str, action: callable):
         """"""
-        tile = Tile(self, image, self.get_next_tile(), action)
+        tile = Tile(self, image, self.get_coordinates(), action)
         tile.image.blit(
-            pygame.font.SysFont("consolas", 25).render(f"{len(self.tiles)}", True, (255, 255, 255)),
-            (24, 24)
+            pygame.font.SysFont("consolas", 16).render(f"{len(self.tiles)}", True, (255, 255, 255)),
+            (8, 8)
         )
-        print(len(self.tiles), tile.rect)
         self.tiles.add(tile)
     
-    def display(self) -> pygame.Surface:
+    def display(self):
         """"""
         self.tiles.draw(self.surface)
-        self.geese.draw(self.surface)
-        return self.surface
     
-    def get_next_tile(self) -> list[int] or tuple[int]:
+    def get_coordinates(self, position: int = None) -> tuple[int, int]:
         """
         Retourne les coordonnées de l'emplacement de la prochaine tuile,
         sert à créer une spirale.
         """
-        tile_number = len(self.tiles)
 
-        def spiral(width: int, height: int, left_tiles: int = None, padding_left: int = 0, padding_top: int = 0):
-            
-            if left_tiles == None:
-                left_tiles = tile_number
+        if position is None:
+            position = len(self.tiles)
 
-            if left_tiles > width - 1:
-                left_tiles -= width
-
-                if left_tiles > height - 1:
-                    left_tiles -= height
-
-                    if left_tiles > width - 1:
-                        left_tiles -= width - 1
-                        
-                        if left_tiles > height - 1:
-                            return spiral(width - 1, height - 1, padding_left + 1, padding_top + 1)
-                        return 0, height - left_tiles
-                    return width - left_tiles + padding_left, height - 1 + padding_top
-                return width - 1 + padding_left, left_tiles + padding_top
-            return left_tiles + padding_left, padding_top
-
-        spiral = spiral(self.width, self.height)
-        print(spiral)
-        return spiral
+        c = spiral(self.width, self.height, position)
+        print(f"{len(self.tiles)}: {c = }")
+        return c
+    
+    def update(self, event: pygame.event.Event):
+        self.tiles.update()
 
 
 class GooseAction:
@@ -132,8 +138,8 @@ class Tile(pygame.sprite.Sprite):
     Une classe qui représente une tuile du plateau.
     """
 
-    WIDTH = 128
-    HEIGHT = 128
+    WIDTH = 64
+    HEIGHT = 64
 
     @staticmethod
     def get_size(width: int, height: int):
