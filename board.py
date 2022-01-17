@@ -14,6 +14,7 @@ def spiral(width: int, height: int, left_tiles: int, padding: int = 0) -> tuple[
     Un algorithme permettant de créer une spirale.
     """
 
+    # Lorsque le nombre de tuiles (position) est supérieur à la largeur.
     if left_tiles > width:
         left_tiles -= width
 
@@ -30,7 +31,7 @@ def spiral(width: int, height: int, left_tiles: int, padding: int = 0) -> tuple[
                 return padding, height - left_tiles - 1 + padding
             return width - 1 - left_tiles + padding, height - 1 + padding
         return width - 1 + padding, left_tiles + padding
-    return left_tiles - 1 + padding, padding
+    return left_tiles + padding - 1, padding
 
 
 # Définition des classes
