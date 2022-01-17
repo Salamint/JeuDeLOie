@@ -61,7 +61,7 @@ class Game(ITask):
         self.stats.blit(
             font.render(
                 time.strftime("Vous jouez depuis : %H:%M:%S:", current_time),
-                True, color=(255, 255, 255), background=(0, 0, 0)
+                True, (255, 255, 255), (0, 0, 0)
             ), (0, 0)
         )
 
