@@ -4,6 +4,7 @@ en rapport avec le plateau de jeu.
 """
 
 # Import de 'common.py'
+from turtle import left
 from common import *
 
 
@@ -13,25 +14,32 @@ def spiral(width: int, height: int, left_tiles: int, padding: int = 0) -> tuple[
     """
     Un algorithme permettant de créer une spirale.
     """
+    width -= 1
+    height -= 1
+    v = 1 if padding > 0 else 0
 
     # Lorsque le nombre de tuiles (position) est supérieur à la largeur.
     if left_tiles > width:
         left_tiles -= width
 
-        if left_tiles > height - 1:
-            left_tiles -= height - 1
+        if left_tiles > height - v:
+            left_tiles -= height
 
-            if left_tiles > width - 1:
-                left_tiles -= width - 1
+            if left_tiles > width - v - 1:
+                left_tiles -= width
 
-                if left_tiles > height - 2:
-                    left_tiles -= height - 2
+                if left_tiles > height - 1 - v * 3:
+                    left_tiles -= height - 1 - v * 3
 
-                    return spiral(width - 2, height - 2, left_tiles, padding + 1)
-                return padding, height - left_tiles - 1 + padding
-            return width - 1 - left_tiles + padding, height - 1 + padding
-        return width - 1 + padding, left_tiles + padding
-    return left_tiles + padding - 1, padding
+                    return spiral(width, height, left_tiles, padding + 1)
+                #print(f"return 4 : {padding, height - left_tiles - v * 2 = }")
+                return padding, height - left_tiles - padding
+            #print(f"return 3 : {width - left_tiles - v, height = }")
+            return width - left_tiles - v, height
+        #print(f"return 2 : {width, left_tiles + v = }")
+        return width, left_tiles + v
+    #print(f"return 1 : {left_tiles, padding = }")
+    return left_tiles, padding
 
 
 # Définition des classes
