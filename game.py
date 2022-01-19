@@ -13,9 +13,6 @@ import player
 
 # Définition des classes
 
-
-
-
 class Dice(pygame.sprite.Sprite):
 
     def __init__(self):
@@ -53,10 +50,10 @@ class Game(ITask):
         self.turn = 0
         self.start_time = time.time()
 
-        self.add_player((255, 255, 255))
+        self.add_player()
         self.stats = pygame.Surface((screen_size[0], 32))
     
-    def add_player(self, color: list[int] or tuple[int]):
+    def add_player(self):
         """
         Stocke un joueur dans la liste des joueurs et des oies.
         Comme le joueur dans la liste des joueurs est identique
