@@ -13,7 +13,6 @@ import player
 
 # Définition des classes
 
-
 class Dice(pygame.sprite.Sprite):
     """
     Classe représentant les deux dés qui pourront être lancés
@@ -53,6 +52,7 @@ class Dice(pygame.sprite.Sprite):
 
 
 class Game(ITask):
+
     """
     Une classe représentant le jeu, elle se différencie par son utilisation et ses attributs :
     La classe Application gère le jeu et les composants graphiques de base (fenêtre),
@@ -72,19 +72,19 @@ class Game(ITask):
         self.turn = 0
         self.start_time = time.time()
 
+        self.add_player()
+        self.stats = pygame.Surface((screen_size[0], 32))
+
         self.new_dice_one = Dice()
         self.new_dice_two = Dice()
         self.dice_one = pygame.sprite.Group()
         self.dice_two = pygame.sprite.Group()
 
-        self.add_player((255, 255, 255))
-        self.stats = pygame.Surface((screen_size[0], 32))
-
         self.add_dices()
         self.dice_zone_one = pygame.Surface((140, 320))
         self.dice_zone_two = pygame.Surface((140, 320))
 
-    def add_player(self, color: list[int] or tuple[int]):
+    def add_player(self):
         """
         Stocke un joueur dans la liste des joueurs et des oies.
         Comme le joueur dans la liste des joueurs est identique
@@ -138,7 +138,7 @@ class Game(ITask):
             self.turn += 1
         else:
             self.turn = 0
-
+    
     def play(self):
         self.players[self.turn].play()
 
@@ -146,7 +146,6 @@ class Game(ITask):
         """
         Met à jour le jeu, le plateau du jeu et les oies.
         """
-
         self.board.update(event)
         self.geese.update(event)
         self.dice_one.update(event)
