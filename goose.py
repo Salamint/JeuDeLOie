@@ -36,13 +36,15 @@ class Goose(pygame.sprite.Sprite):
         self.rect.y = 32
 
         self.position = 0
+        self.last_position = 0
         self.score = 0
     
     def goto(self, tile: int):
         """
         Déplace l'oie sur une case en particulier.
         """
-        if 0 <= tile <= self.player.game.board.size:
+        if 0 <= tile < self.player.game.board.size:
+            self.last_position = self.position
             self.position = tile
     
     def move_back(self, tiles: int):
@@ -75,7 +77,7 @@ class Goose(pygame.sprite.Sprite):
         Met à jour uniquement le rectangle de l'oie (placement), ces modifications sont assez nombreuses
         et spécifiques, elles ont donc été placés dans une méthode à part de la méthode update.
         """
-        coordinates = self.player.game.board.get_coordinates(self.position)
+        coordinates = self.player.game.board.get_at(self.position)
         width = board.Tile.WIDTH
         height = board.Tile.HEIGHT
         self.rect.x = width * coordinates[0]

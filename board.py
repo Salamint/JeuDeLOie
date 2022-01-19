@@ -9,28 +9,70 @@ from common import *
 
 # Définition des fonctions
 
-def spiral(width: int, height: int, left_tiles: int, padding: int = 0) -> tuple[int, int]:
+c = 0
+
+
+def spiral(width: int, height: int, position: int, padding: int = 0) -> (int, int):
     """
-    Un algorithme permettant de créer une spirale.
+    Un algorithme permettant de déterminer les coordonnées d'une case dans une spirale carrée,
+    dans le sens des aiguilles d'une montre, à partir de sa position, dans un repère en deux dimensions.
+    Cet algorithme utilise une fonction récursive (qui s'appelle elle-même), ce genre de fonction
+    est à manipuler avec précaution, ne pas mettre des valeurs qui ne pourraient potentiellement
+    pas être calculées.
+
+    NOTE : Cet algorithme est de plus en plus lorsque la taille de la spirale augmente ainsi que la position,
+    il est donc conseillé de n'utiliser qu'un nombre limité de fois cette fonction, et de stocker les résultats
+    dans un tableau de valeur ou un dictionnaire.
+
+    :param width : La largeur de la spirale.
+    :param height : La hauteur de la spirale.
+    :param position : Les cases restantes (ou nombre de cases).
+    :param padding : L'écartement par rapport au bord de la spirale. S'incrémente de 1 à chaque appel récursif.
+
+    :returns : Un tuple à deux valeurs entières, représentant les coordonnées d'un point.
     """
+    global c
+    print(f"call: {c}")
+    c += 1
 
-    if left_tiles > width:
-        left_tiles -= width
+    # La largeur et la hauteur sont décrémentés.
+    width -= 1
+    height -= 1
 
-        if left_tiles > height - 1:
-            left_tiles -= height - 1
+    #
+    v = (padding - 1 if padding > 0 else 0)
 
-            if left_tiles > width - 1:
-                left_tiles -= width - 1
+    # Lorsque le nombre de cases (position) est supérieur à la nouvelle largeur.
+    if position > width - padding:
+        position -= width
 
-                if left_tiles > height - 2:
-                    left_tiles -= height - 2
+        # Lorsque le nombre de cases restantes (position) est supérieur à la nouvelle hauteur.
+        if position > height - padding - v:
+            position -= height - padding - v
 
-                    return spiral(width - 2, height - 2, left_tiles, padding + 1)
-                return padding, height - left_tiles - 1 + padding
-            return width - 1 - left_tiles + padding, height - 1 + padding
-        return width - 1 + padding, left_tiles + padding
-    return left_tiles + padding, padding
+            # Lorsque le nombre de cases (position) est supérieur à la nouvelle largeur.
+            if position > width - padding:
+                position -= width - padding
+
+                # Lorsque le nombre de cases (position) est supérieur à la nouvelle largeur moins un,
+                # dû à la rangée supérieure, cette ligne est une case plus petite que les autres.
+                if position > height - padding - 1:
+                    position -= height - padding - 1
+
+                    # Appel de la fonction de manière récursive.
+                    return spiral(width, height, position, padding + 1)
+
+                # Retourne les coordonnées (ligne horizontale du haut).
+                return padding, height - position
+
+            # Retourne les coordonnées (ligne horizontale du haut).
+            return width - position, height
+
+        # Retourne les coordonnées (ligne verticale du droite).
+        return width, position + padding + v
+
+    # Retourne les coordonnées (ligne horizontale du haut).
+    return position + v, padding
 
 
 # Définition des classes
@@ -40,29 +82,51 @@ class Board:
     Une classe qui représente le plateau du jeu.
     """
 
+    # todo: remplacer par la méthode `from_file`.
     @staticmethod
-    def from_file(file_name: str):
+    def default(width: int, height: int):
         """
-        Crée un objet Board depuis un fichier JSON.
+        CETTE METHODE EST TEMPORAIRE, A REMPLACER PAR LA METHODE `from_file`,
+        QUI CHARGE UN FICHIER PLATEAU.
         """
-        board = None
-
-        with open(file_name, "r") as file:
-            board = json.load(file)
-            file.close()
-        
-        return board
-    
-    @staticmethod
-    def default(width, height):
         board = Board(
-            pygame.Surface(Tile.get_size(width, height), pygame.SRCALPHA),
+            pygame.Surface(Board.get_surface_size(width, height)),
             (width, height)
         )
         for x in range(width):
             for y in range(height):
                 board.add_tile("assets/tiles/default64.png", lambda: print("action!"))
         return board
+
+    @staticmethod
+    def from_file(file_name: str):
+        """
+        Crée un objet Board depuis un fichier JSON.
+        """
+
+        with open(file_name, "r") as file:
+            board = json.load(file)
+            file.close()
+        
+        return board
+
+    @staticmethod
+    def generate(width: int, height: int) -> {int: (int, int)}:
+        """"""
+        mapping = {}
+
+        for position in range(width * height):
+            mapping.setdefault(position, spiral(width, height, position))
+
+        return mapping
+
+    @staticmethod
+    def get_surface_size(width: int, height: int) -> (int, int):
+        """
+        Une méthode statique qui retourne la largeur et la hauteur d'un plateau en pixels, et de taille donnée,
+        en utilisant les constantes de la classe Tile.
+        """
+        return width * Tile.WIDTH, height * Tile.HEIGHT
     
     def __init__(self, surface: pygame.Surface, size: tuple[int] or list[int]):
         """
@@ -73,7 +137,8 @@ class Board:
         """
         self.surface = surface
         self.width, self.height = size
-        self.size = self.width * self.height
+
+        self.mapping = Board.generate(self.width, self.height)
 
         self.tiles = pygame.sprite.Group()
     
@@ -86,12 +151,11 @@ class Board:
     
     def __setstate__(self, state: dict):
         """"""
-        self.size = state['size']
-        self.width, self.height = self.size
+        self.width, self.height = state.get("size", (8, 8))
     
     def add_tile(self, image: str, action: callable):
         """"""
-        tile = Tile(self, image, self.get_coordinates(), action)
+        tile = Tile(self, image, self.get_at(len(self.tiles)), action)
         tile.image.blit(
             pygame.font.SysFont("consolas", 16).render(f"{len(self.tiles)}", True, (255, 255, 255)),
             (8, 8)
@@ -102,18 +166,16 @@ class Board:
         """"""
         self.tiles.draw(self.surface)
     
-    def get_coordinates(self, position: int = None) -> tuple[int, int]:
+    def get_at(self, position: int = None) -> tuple[int, int] or None:
         """
         Retourne les coordonnées de l'emplacement de la prochaine tuile,
         sert à créer une spirale.
         """
+        return self.mapping.get(position)
 
-        if position is None:
-            position = len(self.tiles)
-
-        c = spiral(self.width, self.height, position)
-        print(f"{len(self.tiles)}: {c = }")
-        return c
+    @property
+    def size(self):
+        return self.width * self.height
     
     def update(self, event: pygame.event.Event):
         self.tiles.update()
@@ -136,15 +198,14 @@ class GooseAction:
 class Tile(pygame.sprite.Sprite):
     """
     Une classe qui représente une tuile du plateau.
+
+    Une tuile est représentée par sa taille et position (rectangle),
+    ainsi qu'une image et une action exécutée lorsqu'un joueur atterri dessus.
     """
 
+    # Constantes représentant la largeur et la hauteur d'une tuile (ne pas modifier).
     WIDTH = 64
     HEIGHT = 64
-
-    @staticmethod
-    def get_size(width: int, height: int):
-        """"""
-        return width * Tile.WIDTH, height * Tile.HEIGHT
 
     def __init__(self, board: Board, image: str, position: tuple[int] or list[int], action: callable):
         super().__init__()
