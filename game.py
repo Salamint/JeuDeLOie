@@ -14,26 +14,45 @@ import player
 # Définition des classes
 
 
-
-
 class Dice(pygame.sprite.Sprite):
+    """
+    Classe représentant les deux dés qui pourront être lancés
+    par le joueur en appuyant sur la touche "espace". Les dés
+    sont lancés de façon aléatoire et ont six faces.
+    """
 
     def __init__(self):
 
         super().__init__()
 
-    def roll(self):
-        ...
+        self.image = pygame.image.load("assets/dice/1.png").convert_alpha()
+
+        self.rect = self.image.get_rect()
 
     def update(self, event: pygame.event.Event):
+        """
+        Change la face du dé en fonction du lancer de dé
+        (chiffre aléatoire entre 1 et 6)
+        """
 
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_SPACE:
-                ...
+                match roll_dice():
+                    case 1:
+                        self.image = pygame.image.load("assets/dice/1.png").convert_alpha()
+                    case 2:
+                        self.image = pygame.image.load("assets/dice/2.png").convert_alpha()
+                    case 3:
+                        self.image = pygame.image.load("assets/dice/3.png").convert_alpha()
+                    case 4:
+                        self.image = pygame.image.load("assets/dice/4.png").convert_alpha()
+                    case 5:
+                        self.image = pygame.image.load("assets/dice/5.png").convert_alpha()
+                    case 6:
+                        self.image = pygame.image.load("assets/dice/6.png").convert_alpha()
 
 
 class Game(ITask):
-
     """
     Une classe représentant le jeu, elle se différencie par son utilisation et ses attributs :
     La classe Application gère le jeu et les composants graphiques de base (fenêtre),
@@ -53,9 +72,18 @@ class Game(ITask):
         self.turn = 0
         self.start_time = time.time()
 
+        self.new_dice_one = Dice()
+        self.new_dice_two = Dice()
+        self.dice_one = pygame.sprite.Group()
+        self.dice_two = pygame.sprite.Group()
+
         self.add_player((255, 255, 255))
         self.stats = pygame.Surface((screen_size[0], 32))
-    
+
+        self.add_dices()
+        self.dice_zone_one = pygame.Surface((140, 320))
+        self.dice_zone_two = pygame.Surface((140, 320))
+
     def add_player(self, color: list[int] or tuple[int]):
         """
         Stocke un joueur dans la liste des joueurs et des oies.
@@ -68,13 +96,24 @@ class Game(ITask):
             p = player.Player(self, identifier, geese_colors[identifier])
             self.players.append(p)
             self.geese.add(p.goose)
-    
+
+    def add_dices(self):
+        """
+        Stocke les dés nouvellement créés dans deux groupes différents
+        pour qu'ils soient indépendants l'un vis-à-vis de l'autre
+        """
+        self.new_dice_one.add(self.dice_one)
+        self.new_dice_two.add(self.dice_two)
+
     def display(self):
         """
         Affiche les modifications sur l'écran.
         """
         self.board.display()
         self.geese.draw(self.board.surface)
+
+        self.dice_one.draw(self.dice_zone_one)
+        self.dice_two.draw(self.dice_zone_two)
 
         current_time = time.localtime(time.time() - self.start_time)
         self.stats.blit(
@@ -86,7 +125,10 @@ class Game(ITask):
 
         self.app.screen.blit(self.stats, (0, 608))
         self.app.screen.blit(self.board.surface, (0, 96))
-    
+
+        self.app.screen.blit(self.dice_zone_one, (545, 200))
+        self.app.screen.blit(self.dice_zone_two, (545, 320))
+
     def next_turn(self):
         """
         Passe au tour de l'oie suivante, si la dernière oie à déjà jouée,
@@ -96,7 +138,7 @@ class Game(ITask):
             self.turn += 1
         else:
             self.turn = 0
-    
+
     def play(self):
         self.players[self.turn].play()
 
@@ -104,6 +146,9 @@ class Game(ITask):
         """
         Met à jour le jeu, le plateau du jeu et les oies.
         """
+
         self.board.update(event)
         self.geese.update(event)
+        self.dice_one.update(event)
+        self.dice_two.update(event)
         self.play()
