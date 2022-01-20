@@ -59,7 +59,7 @@ def roll_dice():
 class ITask(abc.ABC):
     """
     Classe abstraite représentant une tâche.
-    Toutes les méthodes de cette interface sont abstraites, et peut être comparée à une interface.
+    Toutes les méthodes de cette interface sont abstraites et peut être comparée à une interface.
     Une classe implémentant cette interface, devra alors avoir une méthode display,
     qui se charge de l'affichage, ainsi que d'une méthode update, avec un argument `event`,
     qui se charge de l'actualisation de la tâche.
@@ -69,8 +69,8 @@ class ITask(abc.ABC):
     def display(self):
         """
         Méthode appelée lors de l'affichage de la tâche.
-        L'affichage de la tâche correspond à laffichage de tous ses composants.
-        Cette méhode est abstraite et levera une exception si elle n'est pas recouverte.
+        L'affichage de la tâche correspond à l'affichage de tous ses composants.
+        Cette méthode est abstraite et lèvera une exception si elle n'est pas recouverte.
         """
         pass
 
@@ -79,6 +79,6 @@ class ITask(abc.ABC):
         """
         Méthode appelée lors de l'actualisation de la tâche, avec en paramètre un évènement pygame
         (click de souris, touche pressée/levée ...).
-        Cette méthode est abstraite et levera une exception si elle n'est pas recouverte.
+        Cette méthode est abstraite et lèvera une exception si elle n'est pas recouverte.
         """
         pass
