@@ -13,6 +13,7 @@ import abc
 import json
 import os
 import pickle
+
 import pygame
 import random
 import socket
@@ -52,6 +53,15 @@ font = pygame.font.SysFont("consolas", 20)
 
 # Définition des fonctions
 
+def center_surface(surface: pygame.Surface, container: pygame.Surface):
+    text_width, text_height = surface.get_size()
+    container_width, container_height = container.get_size()
+    return (
+        container_width // 2 - text_width // 2,
+        container_height // 2 - text_height // 2
+    )
+
+
 def roll_dice():
     """
     Simule un lancé de dé en retournant un nombre aléator entre 1 et 6.
@@ -66,28 +76,35 @@ class Button(pygame.sprite.Sprite):
     Une classe représentant un bouton clickable.
     """
 
-    def __init__(self, label: str, position: (int, int)):
+    def __init__(self, label: str, position: (int, int), action: callable):
         super().__init__()
-        self.action: callable = None
+        self.action: callable = action
         self.label = label
+        self.hovering = False
 
-        self.image = pygame.Surface((150, 50))
+        self.image = pygame.Surface((256, 64))
         self.image.fill('#000000')
-        pygame.draw.rect(self.image, '#000000', pygame.Rect(0, 0, 150, 50))
-        self.image.blit(font.render(self.label, True, '#FFFFFF', '#000000'), (50, 25))
-        
+        self.render('#FFFFFF')
+
         self.rect = self.image.get_rect()
-        self.x, self.y = position
-    
-    def __call__(self, action: callable = None):
-        if action is None:
-            return self.action
-        self.action = action
-        return self.action
+        self.rect.x, self.rect.y = position
+
+    def render(self, color: str):
+        text = font.render(self.label, True, color, '#000000')
+        self.image.blit(
+            text, center_surface(text, self.image)
+        )
     
     def update(self, event: pygame.event.Event):
-        if event.type == pygame.MOUSEBUTTONDOWN and event.button == pygame.BUTTON_LEFT:
-            self.__call__()
+        if self.rect.collidepoint(*pygame.mouse.get_pos()):
+            if self.hovering is False:
+                self.render('#FFFF00')
+                self.hovering = True
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == pygame.BUTTON_LEFT:
+                self.action()
+        elif self.hovering is True:
+            self.render('#FFFFFF')
+            self.hovering = False
 
 
 class ITask(abc.ABC):
