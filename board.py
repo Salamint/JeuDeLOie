@@ -9,9 +9,6 @@ from common import *
 
 # Définition des fonctions
 
-c = 0
-
-
 def spiral(width: int, height: int, position: int, padding: int = 0) -> (int, int):
     """
     Un algorithme permettant de déterminer les coordonnées d'une case dans une spirale carrée,
@@ -31,16 +28,13 @@ def spiral(width: int, height: int, position: int, padding: int = 0) -> (int, in
 
     :returns : Un tuple à deux valeurs entières, représentant les coordonnées d'un point.
     """
-    global c
-    print(f"call: {c}")
-    c += 1
 
     # La largeur et la hauteur sont décrémentés.
     width -= 1
     height -= 1
 
-    #
-    v = (padding - 1 if padding > 0 else 0)
+    # Variable qui est égale à 0 lors du premier contour puis à 1 pour tous les autres.
+    v = padding - 1 if padding > 0 else 0
 
     # Lorsque le nombre de cases (position) est supérieur à la nouvelle largeur.
     if position > width - padding:
