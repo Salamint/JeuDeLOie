@@ -1,5 +1,5 @@
 """
-Jeu de l'oie en Python 3 avec la bibliothèque Pygame 2.1.0.
+Jeu de l'oie en Python 3 avec la bibliothèque Pygame 2.1.2.
 Ceci est un projet de NSI pour classe de Seconde Générale.
 """
 
@@ -15,7 +15,7 @@ import game
 # Nom du jeu
 __title__ = "Jeu de l'oie"
 # Auteurs du jeu
-__authors__ = []
+__authors__ = ["CelianJok", "soh-L", "Warna38", "Nagrom850"]
 # License du jeu
 __license__ = "MIT License"
 # Version du jeu
