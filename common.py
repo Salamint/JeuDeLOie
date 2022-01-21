@@ -11,6 +11,8 @@ mais ne doit inclure aucun fichier, sauf les imports de bibliothèques.
 # Imports des bibliothèques
 import abc
 import json
+import os
+import pickle
 import pygame
 import random
 import socket
@@ -35,6 +37,7 @@ screen = pygame.display.set_mode(screen_size)
 
 # Constantes
 MAX_PLAYERS = 4
+SAVE_PATH = "data/saves"
 
 # Couleurs
 geese_colors = [
@@ -50,10 +53,41 @@ font = pygame.font.SysFont("consolas", 20)
 # Définition des fonctions
 
 def roll_dice():
+    """
+    Simule un lancé de dé en retournant un nombre aléator entre 1 et 6.
+    """
     return random.randint(1, 6)
 
 
 # Définition des classes et interfaces
+
+class Button(pygame.sprite.Sprite):
+    """
+    Une classe représentant un bouton clickable.
+    """
+
+    def __init__(self, label: str, position: (int, int)):
+        super().__init__()
+        self.action: callable = None
+        self.label = label
+
+        self.image = pygame.Surface((150, 50))
+        self.image.fill('#000000')
+        pygame.draw.rect(self.image, '#000000', pygame.Rect(0, 0, 150, 50))
+        self.image.blit(font.render(self.label, True, '#FFFFFF', '#000000'), (50, 25))
+        
+        self.rect = self.image.get_rect()
+        self.x, self.y = position
+    
+    def __call__(self, action: callable = None):
+        if action is None:
+            return self.action
+        self.action = action
+        return self.action
+    
+    def update(self, event: pygame.event.Event):
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == pygame.BUTTON_LEFT:
+            self.__call__()
 
 
 class ITask(abc.ABC):
