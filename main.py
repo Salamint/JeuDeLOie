@@ -27,13 +27,12 @@ __version__ = "0.0.0"
 def main():
     """
     La fonction 'main' est le point d'entrée du programme.
-    C'est ici que va être lancé le jeu, et lorsqu'une erreur survient,
-    elle est écrite dans le fichier `debug.log` (peut être ouvert avec le bloc-note).
+    C'est ici que va être lancé le jeu.
 
     Cette directive permet de se servir du bloc `if __name__ == '__main__'`
     pour ne pas lancer le jeu lorsque ce fichier est importé,
     mais permet d'utiliser la fonction `main` dans d'autres programmes,
-    sans pour autant utiliser `sys.exit`.
+    sans pour autant utiliser 'sys.exit'.
     """
 
     # Crée une nouvelle instance de `Application`
@@ -58,7 +57,7 @@ class Application:
 
         # Change le titre de l'application
         pygame.display.set_caption(__title__)
-        # Change l'icone de l'application
+        # Change l'icône de l'application
         pygame.display.set_icon(pygame.image.load("assets/goose.png").convert_alpha())
 
         self.clock = pygame.time.Clock()
@@ -86,10 +85,10 @@ class Application:
         Le jeu tourne à 60 fps (frame per second), et chaque tour de boucle correspond à une frame.
         Donc pendant execution du jeu, il y aura 60 tours de boucle en moyenne chaque seconde.
         
-        La variable `self.running` n'est pas une variable locale donc le programme peut être arrêté
-        à n'importe quel moment, mais il est recommandé d'utiliser la méthode `self.quit`.
+        La variable 'self.running' n'est pas une variable locale donc le programme peut être arrêté
+        à n'importe quel moment, mais il est recommandé d'utiliser la méthode 'self.quit'.
 
-        A chaque tour de boucle, tous les éléments graphiques (sprites, groupes de sprites)
+        À chaque tour de boucle, tous les éléments graphiques (sprites, groupes de sprites)
         sont affichés à l'écran, puis l'écran est rafraîchi pour faire apparaitre les changements,
         et enfin on met à jour tous les composants pour chaque évènement récupéré.
 

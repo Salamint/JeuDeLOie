@@ -57,7 +57,7 @@ class Game(ITask):
 
         self.players: list[player.Player] = []
         self.turn = 0
-        self.start_time = time.time()
+        self.start_time = time.perf_counter()
 
         self.add_player()
         self.stats = pygame.Surface((screen_size[0], 32))
@@ -103,7 +103,7 @@ class Game(ITask):
         self.board.display()
         self.geese.draw(self.board.surface)
 
-        current_time = time.localtime(time.time() - self.start_time)
+        current_time = time.gmtime(time.perf_counter() - self.start_time)
         statistic_text = font.render(
             time.strftime("Vous jouez depuis : %H:%M:%S", current_time),
             True, (255, 255, 255), (0, 0, 0)
@@ -142,19 +142,19 @@ class Game(ITask):
 
     def save(self):
         """
-        Sauvegarde le jeu, dans le dernier fichir ou à été enregistré la partie,
+        Sauvegarde le jeu, dans le dernier fichier ou a été enregistré la partie,
         ou lors de la première sauvegarde, crée un fichier de sauvegarde.
         """
 
         # Si le fichier n'existait pas.
         if self.file is None:
 
-            # Si le dossier des sauvegardes n'existe pas encore (première suavegarde).
+            # Si le dossier des sauvegardes n'existe pas encore (première sauvegarde).
             if not os.path.exists(SAVE_PATH):
                 # Crée le dossier des sauvegardes.
                 os.mkdir(SAVE_PATH)
 
-            # Compte le nombre de fichier dans le dossier des sauvegardes.
+            # Compte le nombre de fichiers dans le dossier des sauvegardes.
             save_number = len(os.listdir(SAVE_PATH))
             # Stocke le nom du fichier de sauvegarde.
             self.file = f"{SAVE_PATH}/save#{save_number}.bin"

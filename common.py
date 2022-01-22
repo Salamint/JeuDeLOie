@@ -1,5 +1,5 @@
 """
-Ce fichier regroupe tous les imports de bibliothèques,
+Ce fichier regroupe tous les imports de bibliothèques
 et les déclarations utilisées partout dans le programme.
 
 Ce fichier est à inclure dans chaque nouveau fichier,
@@ -64,7 +64,7 @@ def center_surface(surface: pygame.Surface, container: pygame.Surface):
 
 def roll_dice():
     """
-    Simule un lancé de dé en retournant un nombre aléator entre 1 et 6.
+    Simule un lancé de dé en retournant un nombre aléatoire entre 1 et 6.
     """
     return random.randint(1, 6)
 
@@ -112,7 +112,7 @@ class ITask(abc.ABC):
     Classe abstraite représentant une tâche.
     Toutes les méthodes de cette interface sont abstraites et peut être comparée à une interface.
     Une classe implémentant cette interface, devra alors avoir une méthode display,
-    qui se charge de l'affichage, ainsi que d'une méthode update, avec un argument `event`,
+    qui se charge de l'affichage, ainsi que d'une méthode update, avec un argument 'event',
     qui se charge de l'actualisation de la tâche.
     """
 
