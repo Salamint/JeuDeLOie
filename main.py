@@ -51,7 +51,11 @@ class Application:
     """
 
     def __init__(self):
-        """"""
+        """
+        Initialise une nouvelle application.
+        Récupère l'écran global dans common, change le titre par le titre du programme
+        et change l'icône de la fenêtre.
+        """
         self.screen = screen
         self.running = True
 
@@ -98,35 +102,32 @@ class Application:
         ainsi que créer des décalages entre différentes machines.
         """
 
-        # Tant que le jeu est lancé (un tour de boucle par frame)
+        # Tant que le jeu est lancé (un tour de boucle par frame).
         while self.running:
 
-            # Met à jour l'affichage
+            # Met à jour l'affichage.
             self.display()
-            # Met à jour tous les écrans de pygame
+            # Met à jour tous les écrans de pygame.
             pygame.display.flip()
             
-            # Capture tous les évènements (click, appui sur une touche...) de la frame actuelle
+            # Capture tous les évènements (click, appui sur une touche...) de la frame actuelle.
             for event in pygame.event.get():
 
-                # Met à jour le jeu
-                self.update(event)
+                # Met à jour la tâche en cours.
+                self.task.update(event)
                 
-                # Si l'évènement est celui de cliquer sur la croix
+                # Si l'évènement est celui de fermer la fenêtre.
                 if event.type == pygame.QUIT:
-                    # Fermer le jeu
+                    # Fermer le jeu.
                     self.quit()
             
-            # Régule le jeu à 60 fps
+            # Régule le jeu à 60 fps.
             self.clock.tick(144)
-    
-    def update(self, event: pygame.event.Event):
-        self.task.update(event)
 
 
-# Vérifie si ce fichier n'est pas importé
+# Vérifie si ce fichier que ce fichier est exécuté et non importé.
 if __name__ == '__main__':
-    # Lance le programme
+    # Lance le programme.
     main()
-    # Quitte le programme
+    # Quitte le programme.
     sys.exit()
