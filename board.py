@@ -172,7 +172,6 @@ class Board:
         return self.width * self.height
     
     def update(self, event: pygame.event.Event):
-        # PAF un test !
         self.tiles.update()
 
 
