@@ -3,6 +3,9 @@
 .vscode/
 .idea/
 
+# Project generated directories
+/data/saves/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

@@ -27,13 +27,12 @@ __version__ = "0.0.0"
 def main():
     """
     La fonction 'main' est le point d'entrée du programme.
-    C'est ici que va être lancé le jeu, et lorsqu'une erreur survient,
-    elle est écrite dans le fichier `debug.log` (peut être ouvert avec le bloc-note).
+    C'est ici que va être lancé le jeu.
 
     Cette directive permet de se servir du bloc `if __name__ == '__main__'`
     pour ne pas lancer le jeu lorsque ce fichier est importé,
     mais permet d'utiliser la fonction `main` dans d'autres programmes,
-    sans pour autant utiliser `sys.exit`.
+    sans pour autant utiliser 'sys.exit'.
     """
 
     # Crée une nouvelle instance de `Application`
@@ -52,13 +51,17 @@ class Application:
     """
 
     def __init__(self):
-        """"""
+        """
+        Initialise une nouvelle application.
+        Récupère l'écran global dans common, change le titre par le titre du programme
+        et change l'icône de la fenêtre.
+        """
         self.screen = screen
         self.running = True
 
         # Change le titre de l'application
         pygame.display.set_caption(__title__)
-        # Change l'icone de l'application
+        # Change l'icône de l'application
         pygame.display.set_icon(pygame.image.load("assets/goose.png").convert_alpha())
 
         self.clock = pygame.time.Clock()
@@ -86,10 +89,10 @@ class Application:
         Le jeu tourne à 60 fps (frame per second), et chaque tour de boucle correspond à une frame.
         Donc pendant execution du jeu, il y aura 60 tours de boucle en moyenne chaque seconde.
         
-        La variable `self.running` n'est pas une variable locale donc le programme peut être arrêté
-        à n'importe quel moment, mais il est recommandé d'utiliser la méthode `self.quit`.
+        La variable 'self.running' n'est pas une variable locale donc le programme peut être arrêté
+        à n'importe quel moment, mais il est recommandé d'utiliser la méthode 'self.quit'.
 
-        A chaque tour de boucle, tous les éléments graphiques (sprites, groupes de sprites)
+        À chaque tour de boucle, tous les éléments graphiques (sprites, groupes de sprites)
         sont affichés à l'écran, puis l'écran est rafraîchi pour faire apparaitre les changements,
         et enfin on met à jour tous les composants pour chaque évènement récupéré.
 
@@ -99,35 +102,32 @@ class Application:
         ainsi que créer des décalages entre différentes machines.
         """
 
-        # Tant que le jeu est lancé (un tour de boucle par frame)
+        # Tant que le jeu est lancé (un tour de boucle par frame).
         while self.running:
 
-            # Met à jour l'affichage
+            # Met à jour l'affichage.
             self.display()
-            # Met à jour tous les écrans de pygame
+            # Met à jour tous les écrans de pygame.
             pygame.display.flip()
             
-            # Capture tous les évènements (click, appui sur une touche...) de la frame actuelle
+            # Capture tous les évènements (click, appui sur une touche...) de la frame actuelle.
             for event in pygame.event.get():
 
-                # Met à jour le jeu
-                self.update(event)
+                # Met à jour la tâche en cours.
+                self.task.update(event)
                 
-                # Si l'évènement est celui de cliquer sur la croix
+                # Si l'évènement est celui de fermer la fenêtre.
                 if event.type == pygame.QUIT:
-                    # Fermer le jeu
+                    # Fermer le jeu.
                     self.quit()
             
-            # Régule le jeu à 60 fps
+            # Régule le jeu à 60 fps.
             self.clock.tick(144)
-    
-    def update(self, event: pygame.event.Event):
-        self.task.update(event)
 
 
-# Vérifie si ce fichier n'est pas importé
+# Vérifie si ce fichier que ce fichier est exécuté et non importé.
 if __name__ == '__main__':
-    # Lance le programme
+    # Lance le programme.
     main()
-    # Quitte le programme
+    # Quitte le programme.
     sys.exit()

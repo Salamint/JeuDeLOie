@@ -63,4 +63,18 @@ python3 main.py
 `````
 
 ## Intégration
-L'intégration dans d'autres programmes se fait aisément.
+L'intégration dans d'autres programmes se fait aisément. En effet, grâce à la fonction ```main()```, vous pouvez très
+simplement importer ce jeu dans d'autres projets. Assurez-vous seulement que le dossier du jeu se trouve dans votre
+répertoire du projet, puis placez au début de votre programme :
+`````python
+from JeuDeLOie import main  # Importe le fichier principal 'main' du dossier du jeu.
+`````
+Ensuite vous pourrez l'utiliser dans tous les programmes aillant importé le jeu :
+````python
+main.main()                 # Lance le jeu, comme lors d'un double-clique.
+````
+Vous pouvez aussi créer une nouvelle instance de la classe ```Application``` pour la modifier :
+````python
+jeu = main.Application()    # Crée une instance d'application.
+jeu.start()                 # Lance le jeu.
+````

@@ -1,5 +1,5 @@
 """
-Ce fichier regroupe tous les imports de bibliothèques,
+Ce fichier regroupe tous les imports de bibliothèques
 et les déclarations utilisées partout dans le programme.
 
 Ce fichier est à inclure dans chaque nouveau fichier,
@@ -13,6 +13,7 @@ import abc
 import json
 import os
 import pickle
+
 import pygame
 import random
 import socket
@@ -52,9 +53,22 @@ font = pygame.font.SysFont("consolas", 20)
 
 # Définition des fonctions
 
-def roll_dice():
+def center_surface(surface: pygame.Surface, container: pygame.Surface) -> (int, int):
     """
-    Simule un lancé de dé en retournant un nombre aléator entre 1 et 6.
+    Une fonction permettant de centrer une surface à l'intérieur d'une autre surface.
+    Renvoie uniquement des coordonnées, ne modifie aucune des deux surfaces.
+    """
+    text_width, text_height = surface.get_size()
+    container_width, container_height = container.get_size()
+    return (
+        container_width // 2 - text_width // 2,
+        container_height // 2 - text_height // 2
+    )
+
+
+def roll_dice() -> int:
+    """
+    Simule un lancé de dé en retournant un nombre aléatoire entre 1 et 6.
     """
     return random.randint(1, 6)
 
@@ -63,31 +77,71 @@ def roll_dice():
 
 class Button(pygame.sprite.Sprite):
     """
-    Une classe représentant un bouton clickable.
+    Une classe représentant un bouton cliquable.
+    Un bouton a un texte, une surface et un rectangle servant de boîte de collision.
     """
 
-    def __init__(self, label: str, position: (int, int)):
+    def __init__(self, label: str, position: (int, int), action: callable):
+        """
+        Initialise un nouveau bouton.
+        Une fonction, méthode ou autre objet appelable est passée en paramètres et est appelé lors du click sur
+        le bouton sans aucun paramètre.
+        """
         super().__init__()
-        self.action: callable = None
-        self.label = label
 
-        self.image = pygame.Surface((150, 50))
+        # Données spécifiques au bouton (texte, action, souris au-dessus...).
+        self.action: callable = action
+        self.label = label
+        self.hovering = False
+
+        # Image du bouton (composant graphique).
+        self.image = pygame.Surface((256, 64))
         self.image.fill('#000000')
-        pygame.draw.rect(self.image, '#000000', pygame.Rect(0, 0, 150, 50))
-        self.image.blit(font.render(self.label, True, '#FFFFFF', '#000000'), (50, 25))
-        
+        self.render('#FFFFFF')
+
+        # Rectangle du bouton (boîte de collision et d'affichage).
         self.rect = self.image.get_rect()
-        self.x, self.y = position
-    
-    def __call__(self, action: callable = None):
-        if action is None:
-            return self.action
-        self.action = action
-        return self.action
+        self.rect.x, self.rect.y = position
+
+    def render(self, color: str):
+        """
+        Affiche le texte du bouton sur son image, au centre et avec une couleur indiquée (code hexadecimal).
+        Cette action est gourmande en temps, il est donc conseillé de l'utiliser peut souvent.
+        """
+        # Créer une surface avec le texte de la couleur indiquée.
+        text = font.render(self.label, True, color, '#000000')
+        # Affiche le texte sur l'image du bouton au centre.
+        self.image.blit(
+            text, center_surface(text, self.image)
+        )
     
     def update(self, event: pygame.event.Event):
-        if event.type == pygame.MOUSEBUTTONDOWN and event.button == pygame.BUTTON_LEFT:
-            self.__call__()
+        """
+        Met à jour le bouton, active son action lorsque la souris clique dessus
+        et change sa couleur si la souris est placée au-dessus du bouton.
+        """
+
+        # Lorsque la pointe de la souris rentre en contact avec la boîte de collision.
+        if self.rect.collidepoint(*pygame.mouse.get_pos()):
+
+            # Si ce n'était pas le cas au par-avant.
+            if self.hovering is False:
+                # Change la couleur du texte du bouton.
+                self.render('#FFFF00')
+                # Indique qu'à présent la souris est au-dessus du bouton.
+                self.hovering = True
+
+            # Si le click gauche est actionné.
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == pygame.BUTTON_LEFT:
+                # Actionne la fonction.
+                self.action()
+
+        # Si la souris n'est pas placée au-dessus du bouton, et que ce n'était pas le cas avant.
+        elif self.hovering is True:
+            # Change la couleur du texte du bouton.
+            self.render('#FFFFFF')
+            # Indique qu'à présent la souris n'est au-dessus du bouton.
+            self.hovering = False
 
 
 class ITask(abc.ABC):
@@ -95,7 +149,7 @@ class ITask(abc.ABC):
     Classe abstraite représentant une tâche.
     Toutes les méthodes de cette interface sont abstraites et peut être comparée à une interface.
     Une classe implémentant cette interface, devra alors avoir une méthode display,
-    qui se charge de l'affichage, ainsi que d'une méthode update, avec un argument `event`,
+    qui se charge de l'affichage, ainsi que d'une méthode update, avec un argument 'event',
     qui se charge de l'actualisation de la tâche.
     """
 

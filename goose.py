@@ -26,10 +26,7 @@ class Goose(pygame.sprite.Sprite):
         self.color = color
 
         self.image = pygame.image.load("assets/goose.png").convert_alpha()
-        for x in range(self.image.get_width()):
-            for y in range(self.image.get_height()):
-                if self.image.get_at((x, y)) == (255, 255, 255):
-                    self.image.set_at((x, y), self.color)
+        self.change_color(self.color, (255, 255, 255))
 
         self.rect = self.image.get_rect()
         self.rect.x = 32
@@ -38,6 +35,13 @@ class Goose(pygame.sprite.Sprite):
         self.position = 0
         self.last_position = 0
         self.score = 0
+
+    def change_color(self, new: str or tuple, old: str or tuple):
+        """"""
+        for x in range(self.image.get_width()):
+            for y in range(self.image.get_height()):
+                if self.image.get_at((x, y)) == old:
+                    self.image.set_at((x, y), new)
     
     def goto(self, tile: int):
         """

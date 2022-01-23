@@ -3,7 +3,6 @@ Un fichier contenant les composants du jeu.
 """
 
 # Import de 'common.py'
-from os import stat
 from common import *
 
 # Import d'autres fichiers
@@ -31,7 +30,6 @@ class Dice(pygame.sprite.Sprite):
 
 
 class Game(ITask):
-
     """
     Une classe représentant le jeu, elle se différencie par son utilisation et ses attributs :
     La classe Application gère le jeu et les composants graphiques de base (fenêtre),
@@ -51,15 +49,19 @@ class Game(ITask):
 
         self.pause = False
         self.pause_menu = pygame.sprite.Group()
-        self.pause_menu.add(self.resume, self.save, self.quit)
-        
+        self.pause_menu.add(
+            Button("Reprendre", (192, 224), self.resume),
+            Button("Sauvegarder", (192, 288), self.save),
+            Button("Quitter", (192, 352), self.quit)
+        )
+
         self.players: list[player.Player] = []
         self.turn = 0
-        self.start_time = time.time()
+        self.start_time = time.perf_counter()
 
         self.add_player()
         self.stats = pygame.Surface((screen_size[0], 32))
-    
+
     def __getstate__(self) -> dict:
         """"""
         state = {
@@ -71,7 +73,7 @@ class Game(ITask):
             'multiplayer': self.gameplay
         }
         return state
-    
+
     def __setstate__(self, state: dict):
         """"""
         self.file = state.get('file', None)
@@ -80,7 +82,7 @@ class Game(ITask):
         self.players = state.get('players', [])
         self.start_time = state.get('elapsed', 0) - time.time()
         self.gameplay = state.get('multiplayer', multiplayer.SAME_MACHINE)
-    
+
     def add_player(self):
         """
         Stocke un joueur dans la liste des joueurs et des oies.
@@ -93,7 +95,7 @@ class Game(ITask):
             p = player.Player(self, identifier, geese_colors[identifier])
             self.players.append(p)
             self.geese.add(p.goose)
-    
+
     def display(self):
         """
         Affiche les modifications sur l'écran.
@@ -101,20 +103,19 @@ class Game(ITask):
         self.board.display()
         self.geese.draw(self.board.surface)
 
-        current_time = time.localtime(time.time() - self.start_time)
-        self.stats.blit(
-            font.render(
-                time.strftime("Vous jouez depuis : %H:%M:%S:", current_time),
-                True, (255, 255, 255), (0, 0, 0)
-            ), (0, 0)
+        current_time = time.gmtime(time.perf_counter() - self.start_time)
+        statistic_text = font.render(
+            time.strftime("Vous jouez depuis : %H:%M:%S", current_time),
+            True, (255, 255, 255), (0, 0, 0)
         )
+        self.stats.blit(statistic_text, center_surface(statistic_text, self.stats))
+
+        self.app.screen.blit(self.stats, (0, 608))
+        self.app.screen.blit(self.board.surface, (64, 96))
 
         if self.pause:
             self.pause_menu.draw(self.app.screen)
 
-        self.app.screen.blit(self.stats, (0, 608))
-        self.app.screen.blit(self.board.surface, (0, 96))
-    
     def next_turn(self):
         """
         Passe au tour de l'oie suivante, si la dernière oie à déjà jouée,
@@ -124,46 +125,43 @@ class Game(ITask):
             self.turn += 1
         else:
             self.turn = 0
-    
+
     def play(self):
         self.players[self.turn].play()
-    
-    @Button("Quitter", (720, 300))
+
     def quit(self):
         """
         Quitte le jeu en remplaçant la tâche en cours par l'écran titre.
         """
         # todo : Créer l'écran titre et remplacer 'None' par l'écran titre
         self.app.task = None
-    
-    @Button("Reprendre", (720, 350))
+
     def resume(self):
         """"""
         self.pause = False
-    
-    @Button("Sauvegarder", (720, 400))
+
     def save(self):
         """
-        Sauvegarde le jeu, dans le dernier fichir ou à été enregistré la partie,
+        Sauvegarde le jeu, dans le dernier fichier ou a été enregistré la partie,
         ou lors de la première sauvegarde, crée un fichier de sauvegarde.
         """
 
-        # Si le fichier n'exitsait pas.
+        # Si le fichier n'existait pas.
         if self.file is None:
 
-            # Si le dossier des sauvegardes n'existe pas encore (première suavegarde).
+            # Si le dossier des sauvegardes n'existe pas encore (première sauvegarde).
             if not os.path.exists(SAVE_PATH):
                 # Crée le dossier des sauvegardes.
                 os.mkdir(SAVE_PATH)
-            
-            # Compte le nombre de fichier dans le dossier des sauvegardes.
+
+            # Compte le nombre de fichiers dans le dossier des sauvegardes.
             save_number = len(os.listdir(SAVE_PATH))
             # Stocke le nom du fichier de sauvegarde.
             self.file = f"{SAVE_PATH}/save#{save_number}.bin"
-        
+
         # Sauvegarde le jeu.
         with open(self.file, "wb") as file:
-            pickle.dump(self, file)
+            pickle.dump(self.__getstate__(), file)
 
     def update(self, event: pygame.event.Event):
         """
@@ -171,7 +169,7 @@ class Game(ITask):
         """
         if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
             self.pause = not self.pause
-        
+
         if not self.pause:
             self.board.update(event)
             self.geese.update(event)
