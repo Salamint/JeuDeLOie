@@ -4,6 +4,7 @@ Ceci est un projet de NSI pour classe de Seconde Générale.
 """
 
 # Import de 'common.py'
+import title_screen
 from common import *
 
 # Import des autres fichiers
@@ -65,7 +66,7 @@ class Application:
         pygame.display.set_icon(pygame.image.load("assets/goose.png").convert_alpha())
 
         self.clock = pygame.time.Clock()
-        self.task = game.Game(self)
+        self.task = title_screen.Title()
 
     def display(self):
         """

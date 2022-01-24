@@ -43,6 +43,8 @@ class Game(ITask):
         self.app = app
         self.file = None
 
+        self.is_playing = False
+
         self.board = board.Board.default(8, 8)
         self.gameplay = multiplayer.SAME_MACHINE
         self.geese = pygame.sprite.Group()
@@ -50,9 +52,9 @@ class Game(ITask):
         self.pause = False
         self.pause_menu = pygame.sprite.Group()
         self.pause_menu.add(
-            Button("Reprendre", (192, 224), self.resume),
-            Button("Sauvegarder", (192, 288), self.save),
-            Button("Quitter", (192, 352), self.quit)
+            Button("Reprendre", (158, 190), self.resume),
+            Button("Sauvegarder", (158, 254), self.save),
+            Button("Quitter", (158, 318), self.quit)
         )
 
         self.players: list[player.Player] = []
@@ -111,7 +113,7 @@ class Game(ITask):
         self.stats.blit(statistic_text, center_surface(statistic_text, self.stats))
 
         self.app.screen.blit(self.stats, (0, 608))
-        self.app.screen.blit(self.board.surface, (64, 96))
+        self.app.screen.blit(self.board.surface, (30, 30))
 
         if self.pause:
             self.pause_menu.draw(self.app.screen)
@@ -127,6 +129,7 @@ class Game(ITask):
             self.turn = 0
 
     def play(self):
+        self.is_playing = True
         self.players[self.turn].play()
 
     def quit(self):
@@ -176,3 +179,4 @@ class Game(ITask):
             self.play()
         else:
             self.pause_menu.update(event)
+
