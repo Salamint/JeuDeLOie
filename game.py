@@ -19,17 +19,14 @@ class Dice(pygame.sprite.Sprite):
 
         super().__init__()
 
-    def roll(self):
-        ...
+    def roll(self): ...
 
     def update(self, event: pygame.event.Event):
-
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_SPACE:
-                ...
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+            pass
 
 
-class Game(ITask):
+class Game(Task):
     """
     Une classe représentant le jeu, elle se différencie par son utilisation et ses attributs :
     La classe Application gère le jeu et les composants graphiques de base (fenêtre),
@@ -39,8 +36,8 @@ class Game(ITask):
     display et update.
     """
 
-    def __init__(self, app):
-        self.app = app
+    def __init__(self, app: Application):
+        super().__init__(app)
         self.file = None
 
         self.is_playing = False
@@ -52,9 +49,9 @@ class Game(ITask):
         self.pause = False
         self.pause_menu = pygame.sprite.Group()
         self.pause_menu.add(
-            Button("Reprendre", (158, 190), self.resume),
-            Button("Sauvegarder", (158, 254), self.save),
-            Button("Quitter", (158, 318), self.quit)
+            Button("Reprendre", (192, 192), self.resume),
+            Button("Sauvegarder", (192, 256), self.save),
+            Button("Quitter", (192, 320), self.quit)
         )
 
         self.players: list[player.Player] = []
@@ -106,14 +103,14 @@ class Game(ITask):
         self.geese.draw(self.board.surface)
 
         current_time = time.gmtime(time.perf_counter() - self.start_time)
-        statistic_text = font.render(
+        statistic_text = debug_font.render(
             time.strftime("Vous jouez depuis : %H:%M:%S", current_time),
             True, (255, 255, 255), (0, 0, 0)
         )
         self.stats.blit(statistic_text, center_surface(statistic_text, self.stats))
 
         self.app.screen.blit(self.stats, (0, 608))
-        self.app.screen.blit(self.board.surface, (30, 30))
+        self.app.screen.blit(self.board.surface, (64, 64))
 
         if self.pause:
             self.pause_menu.draw(self.app.screen)
@@ -136,8 +133,7 @@ class Game(ITask):
         """
         Quitte le jeu en remplaçant la tâche en cours par l'écran titre.
         """
-        # todo : Créer l'écran titre et remplacer 'None' par l'écran titre
-        self.app.task = None
+        self.app.task = self.app.default_task(self.app)
 
     def resume(self):
         """"""
@@ -160,7 +156,7 @@ class Game(ITask):
             # Compte le nombre de fichiers dans le dossier des sauvegardes.
             save_number = len(os.listdir(SAVE_PATH))
             # Stocke le nom du fichier de sauvegarde.
-            self.file = f"{SAVE_PATH}/save#{save_number}.bin"
+            self.file = f"{SAVE_PATH}/save#{save_number}.pickle"
 
         # Sauvegarde le jeu.
         with open(self.file, "wb") as file:
@@ -179,4 +175,3 @@ class Game(ITask):
             self.play()
         else:
             self.pause_menu.update(event)
-

@@ -4,11 +4,8 @@ Ceci est un projet de NSI pour classe de Seconde Générale.
 """
 
 # Import de 'common.py'
-import title_screen
-from common import *
-
-# Import des autres fichiers
 import game
+from common import *
 
 
 # variables globales de signature (version, auteurs, license, droits...)
@@ -44,7 +41,7 @@ def main():
 
 # Définition des classes
 
-class Application:
+class Application(Application):
     """
     Une classe représentant une application.
     Cette classe est le point de départ du programme,
@@ -57,8 +54,11 @@ class Application:
         Récupère l'écran global dans common, change le titre par le titre du programme
         et change l'icône de la fenêtre.
         """
-        self.screen = screen
-        self.running = True
+
+        # Appelle le constructeur de la super classe
+        super().__init__(screen, TitleScreen)
+        # Stoppe le jeu
+        self.running = False
 
         # Change le titre de l'application
         pygame.display.set_caption(__title__)
@@ -66,7 +66,6 @@ class Application:
         pygame.display.set_icon(pygame.image.load("assets/goose.png").convert_alpha())
 
         self.clock = pygame.time.Clock()
-        self.task = title_screen.Title()
 
     def display(self):
         """
@@ -103,6 +102,9 @@ class Application:
         ainsi que créer des décalages entre différentes machines.
         """
 
+        # Démarre le jeu
+        self.running = True
+
         # Tant que le jeu est lancé (un tour de boucle par frame).
         while self.running:
 
@@ -124,6 +126,70 @@ class Application:
             
             # Régule le jeu à 60 fps.
             self.clock.tick(144)
+
+
+class TitleScreen(Task):
+    """
+    Classe représentant l'écran de démarrage du jeu.
+    """
+
+    def __init__(self, app: Application):
+
+        self.pos = (100, 400)
+        self.text_surface = sans_font.render("Le Jeu De L'Oie", True, (255, 255, 255))
+        self.goose = pygame.image.load("assets/goose.png").convert_alpha()
+
+        # Core attributes
+        super().__init__(app)
+        self.pressed = False
+        self.elevation = 5
+        self.dynamic_elevation = self.elevation
+        self.original_y_pos = self.pos[1]
+
+        # top rectangle
+        self.top_rect = pygame.Rect(self.pos, (200, 40))
+        self.top_color = '#475F77'
+
+        # bottom rectangle
+        self.bottom_rect = pygame.Rect(self.pos, (200, 40))
+        self.bottom_color = '#354B5E'
+        # text
+        self.text_surf = default_font.render("Start The Game", True, '#FFFFFF')
+        self.text_rect = self.text_surf.get_rect()
+
+    def display(self):
+        """"""
+        self.top_rect.y = self.original_y_pos - self.dynamic_elevation
+        self.text_rect.center = self.top_rect.center
+
+        self.bottom_rect.midtop = self.top_rect.midtop
+        self.bottom_rect.height = self.top_rect.height + self.dynamic_elevation
+
+        pygame.draw.rect(screen, self.bottom_color, self.bottom_rect, border_radius=12)
+        pygame.draw.rect(screen, self.top_color, self.top_rect, border_radius=12)
+        screen.blit(self.text_surf, self.text_rect)
+
+        screen.blit(self.text_surface, (170, 100))
+        screen.blit(self.goose, (640, 110))
+        screen.blit(self.goose, (90, 110))
+
+    def update(self, event: pygame.event.Event):
+        """"""
+        mouse_pos = pygame.mouse.get_pos()
+        if self.top_rect.collidepoint(mouse_pos):
+            self.top_color = '#D74B4B'
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == pygame.BUTTON_LEFT:
+                self.dynamic_elevation = 0
+                self.pressed = True
+                self.app.task = game.Game(self.app)
+            else:
+                self.dynamic_elevation = self.elevation
+                if self.pressed is True:
+                    self.display()
+                    self.pressed = False
+        else:
+            self.dynamic_elevation = self.elevation
+            self.top_color = '#475F77'
 
 
 # Vérifie si ce fichier que ce fichier est exécuté et non importé.

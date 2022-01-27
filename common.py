@@ -13,7 +13,6 @@ import abc
 import json
 import os
 import pickle
-
 import pygame
 import random
 import socket
@@ -48,7 +47,10 @@ geese_colors = [
     (128, 128, 255)
 ]
 
-font = pygame.font.SysFont("consolas", 20)
+# Polices d'écriture
+debug_font = pygame.font.SysFont("consolas", 20)
+default_font = pygame.font.Font(None, 30)
+sans_font = pygame.font.SysFont("Comic Sans MS", 60)
 
 
 # Définition des fonctions
@@ -109,7 +111,7 @@ class Button(pygame.sprite.Sprite):
         Cette action est gourmande en temps, il est donc conseillé de l'utiliser peut souvent.
         """
         # Créer une surface avec le texte de la couleur indiquée.
-        text = font.render(self.label, True, color, '#000000')
+        text = debug_font.render(self.label, True, color, '#000000')
         # Affiche le texte sur l'image du bouton au centre.
         self.image.blit(
             text, center_surface(text, self.image)
@@ -144,14 +146,57 @@ class Button(pygame.sprite.Sprite):
             self.hovering = False
 
 
-class ITask(abc.ABC):
+class PushButton(Button):
+    """"""
+
+
+# todo : documentation
+class Application(abc.ABC):
+    """
+    Classe abstraite représentant une application.
+    Toutes les méthodes de cette classe ne sont abstraites (comme la méthode __init__).
+
+    Une classe implémentant cette interface devra alors avoir une méthode display, qui se charge de l'affichage,
+    une méthode quit qui se charge de quitter l'application et une méthode start que se charge su démarrage
+    de l'application.
+    """
+
+    def __init__(self, __screen: pygame.Surface, task: type):
+        """"""
+        self.screen = __screen
+        self.default_task: type = task
+        self.task: Task = self.default_task(self)
+
+    @abc.abstractmethod
+    def display(self):
+        """"""
+        pass
+
+    @abc.abstractmethod
+    def quit(self):
+        """"""
+        pass
+
+    @abc.abstractmethod
+    def start(self):
+        """"""
+        pass
+
+
+class Task(abc.ABC):
     """
     Classe abstraite représentant une tâche.
-    Toutes les méthodes de cette interface sont abstraites et peut être comparée à une interface.
+    Toutes les méthodes de cette classe ne sont abstraites (comme la méthode __init__).
+
     Une classe implémentant cette interface, devra alors avoir une méthode display,
     qui se charge de l'affichage, ainsi que d'une méthode update, avec un argument 'event',
     qui se charge de l'actualisation de la tâche.
     """
+
+    def __init__(self, app: Application):
+        # todo: documentation
+        """"""
+        self.app = app
 
     @abc.abstractmethod
     def display(self):
