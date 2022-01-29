@@ -4,6 +4,9 @@ ainsi que les déclarations de variables en rapport avec l'élément 'oie'.
 """
 
 # Import de 'common.py'
+import pygame.time
+
+import main
 from common import *
 
 # Import d'autres fichiers
@@ -59,17 +62,30 @@ class Goose(pygame.sprite.Sprite):
         """
         self.goto(self.position + tiles)
     
-    def update(self, event: pygame.event.Event):
+    def update(self, event: pygame.event.Event, nbr_move):
         """
         Met à jour l'oie (placement).
         """
-        
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_LEFT:
                 self.move_back(1)
             elif event.key == pygame.K_RIGHT:
                 self.move_forward(1)
-        
+
+        # Pour que l'oie avance case par case (NON TERMINÉ, L'OIE POPE DIRECTEMENT SUR LA CASE)
+        while nbr_move > 0:
+
+            # Si l'oie n'arrive pas pile sur la case 63, il doit reculer du nombre de cases qu'il a dépassé
+            if self.position == 63 and nbr_move + self.position > 63:
+                self.move_back(nbr_move)
+                nbr_move -= nbr_move
+            else:  # Sinon il avance normalement
+                nbr_move -= 1
+                self.move_forward(1)
+
+            print("Nombre de cases à avancer :", nbr_move)
+            print("Position :", self.position)
+
         self.update_rect()
 
     def update_rect(self):

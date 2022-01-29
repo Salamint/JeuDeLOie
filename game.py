@@ -25,30 +25,40 @@ class Dice(pygame.sprite.Sprite):
         super().__init__()
 
         self.image = pygame.image.load("assets/dice/1.png").convert_alpha()
-
         self.rect = self.image.get_rect()
+
+        self.nbr_move = 0
 
     def update(self, event: pygame.event.Event):
         """
         Change la face du dé en fonction du lancer de dé
-        (chiffre aléatoire entre 1 et 6)
+        (chiffre aléatoire entre 1 et 6) et compte le nombre
+        de cases que l'oie doit parcourir
         """
+
+        self.nbr_move = 0
 
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_SPACE:
                 match roll_dice():
                     case 1:
                         self.image = pygame.image.load("assets/dice/1.png").convert_alpha()
+                        self.nbr_move += 1
                     case 2:
                         self.image = pygame.image.load("assets/dice/2.png").convert_alpha()
+                        self.nbr_move += 2
                     case 3:
                         self.image = pygame.image.load("assets/dice/3.png").convert_alpha()
+                        self.nbr_move += 3
                     case 4:
                         self.image = pygame.image.load("assets/dice/4.png").convert_alpha()
+                        self.nbr_move += 4
                     case 5:
                         self.image = pygame.image.load("assets/dice/5.png").convert_alpha()
+                        self.nbr_move += 5
                     case 6:
                         self.image = pygame.image.load("assets/dice/6.png").convert_alpha()
+                        self.nbr_move += 6
 
 
 class Game(ITask):
@@ -111,7 +121,6 @@ class Game(ITask):
         """
         self.board.display()
         self.geese.draw(self.board.surface)
-
         self.dice_one.draw(self.dice_zone_one)
         self.dice_two.draw(self.dice_zone_two)
 
@@ -125,7 +134,6 @@ class Game(ITask):
 
         self.app.screen.blit(self.stats, (0, 608))
         self.app.screen.blit(self.board.surface, (0, 96))
-
         self.app.screen.blit(self.dice_zone_one, (545, 200))
         self.app.screen.blit(self.dice_zone_two, (545, 320))
 
@@ -146,8 +154,11 @@ class Game(ITask):
         """
         Met à jour le jeu, le plateau du jeu et les oies.
         """
+        nbr_move = self.new_dice_one.nbr_move + self.new_dice_two.nbr_move
+
         self.board.update(event)
-        self.geese.update(event)
+        self.geese.update(event, nbr_move)
         self.dice_one.update(event)
         self.dice_two.update(event)
+
         self.play()
