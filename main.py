@@ -4,6 +4,8 @@ Ceci est un projet de NSI pour classe de Seconde Générale.
 """
 
 # Import de 'common.py'
+import pygame
+
 import game
 from common import *
 
@@ -128,68 +130,98 @@ class Application(Application):
             self.clock.tick(144)
 
 
+# todo: documentation
 class TitleScreen(Task):
     """
     Classe représentant l'écran de démarrage du jeu.
     """
 
     def __init__(self, app: Application):
-
-        self.pos = (100, 400)
-        self.text_surface = sans_font.render("Le Jeu De L'Oie", True, (255, 255, 255))
-        self.goose = pygame.image.load("assets/goose.png").convert_alpha()
-
-        # Core attributes
+        """"""
+        # Appel du constructeur de la superclasse.
         super().__init__(app)
-        self.pressed = False
-        self.elevation = 5
-        self.dynamic_elevation = self.elevation
-        self.original_y_pos = self.pos[1]
 
-        # top rectangle
-        self.top_rect = pygame.Rect(self.pos, (200, 40))
-        self.top_color = '#475F77'
+        # Images et surfaces de base.
+        text = sans_font.render("Le Jeu De L'Oie", True, (255, 255, 255))
+        goose = pygame.image.load("assets/goose.png").convert_alpha()
 
-        # bottom rectangle
-        self.bottom_rect = pygame.Rect(self.pos, (200, 40))
-        self.bottom_color = '#354B5E'
-        # text
-        self.text_surf = default_font.render("Start The Game", True, '#FFFFFF')
-        self.text_rect = self.text_surf.get_rect()
+        # Titre.
+        self.title = pygame.Surface((self.app.screen.get_width() - 64, 64))
+        self.title.blit(goose, (0, 0))
+        self.title.blit(text, (64, -16))
+        self.title.blit(goose, (512, 0))
+        self.title_position = (32, 64)
+
+        # Menu principal.
+        self.menu = pygame.sprite.Group()
+        self.menu.add(
+            PushButton("Nouvelle Partie", (256, 64), (192, 384), self.play),
+            PushButton("Charger", (256, 64), (192, 480), self.save_select)
+        )
+
+        # Menu des sauvegardes.
+        self.select = False
+        self.saves = pygame.sprite.Group()
+        self.save_selector = pygame.Surface((256, 384))
+        self.save_selector_rect = pygame.Rect(192, 192, 256, 384)
+        self.back_button = PushButton("Retour", (128, 64), (32, 512), self.main)
 
     def display(self):
         """"""
-        self.top_rect.y = self.original_y_pos - self.dynamic_elevation
-        self.text_rect.center = self.top_rect.center
+        screen.blit(self.title, self.title_position)
+        if self.select:
+            rect = self.save_selector_rect.copy()
+            rect.x -= 4
+            rect.y -= 4
+            rect.width += 8
+            rect.height += 8
+            pygame.draw.rect(self.app.screen, '#FFFFFF', rect)
+            self.save_selector.fill('#000000')
+            self.saves.draw(self.save_selector)
+            self.app.screen.blit(self.save_selector, self.save_selector_rect)
+            self.app.screen.blit(self.back_button.image, self.back_button.rect)
+        else:
+            self.menu.draw(self.app.screen)
 
-        self.bottom_rect.midtop = self.top_rect.midtop
-        self.bottom_rect.height = self.top_rect.height + self.dynamic_elevation
+    def load(self, name: str):
+        with open(name, "rb") as file:
+            self.app.task = pickle.load(file, encoding="UTF-8")
 
-        pygame.draw.rect(screen, self.bottom_color, self.bottom_rect, border_radius=12)
-        pygame.draw.rect(screen, self.top_color, self.top_rect, border_radius=12)
-        screen.blit(self.text_surf, self.text_rect)
+    def main(self):
+        self.select = False
 
-        screen.blit(self.text_surface, (170, 100))
-        screen.blit(self.goose, (640, 110))
-        screen.blit(self.goose, (90, 110))
+    def play(self):
+        """"""
+        self.app.task = game.Game(self.app)
+
+    def save_select(self):
+        """"""
+        self.saves.empty()
+
+        height = 8
+        for file in os.listdir(access_directory(SAVE_PATH)):
+            path = f"{SAVE_PATH}/{file}"
+            if os.path.isfile(path):
+                self.saves.add(
+                    PushButton(file, (256, 64), (0, height), lambda: self.load(path)))
+            height += 96
+
+        self.select = True
 
     def update(self, event: pygame.event.Event):
         """"""
-        mouse_pos = pygame.mouse.get_pos()
-        if self.top_rect.collidepoint(mouse_pos):
-            self.top_color = '#D74B4B'
-            if event.type == pygame.MOUSEBUTTONDOWN and event.button == pygame.BUTTON_LEFT:
-                self.dynamic_elevation = 0
-                self.pressed = True
-                self.app.task = game.Game(self.app)
-            else:
-                self.dynamic_elevation = self.elevation
-                if self.pressed is True:
-                    self.display()
-                    self.pressed = False
+        if self.select:
+            if event.type == pygame.MOUSEWHEEL:
+                if event.y < 0:
+                    for sprite in self.saves:
+                        sprite.rect.y -= 96
+                if event.y > 0:
+                    for sprite in self.saves:
+                        sprite.rect.y += 96
+            self.saves.update(event, (192, 192))
+            self.back_button.update(event)
         else:
-            self.dynamic_elevation = self.elevation
-            self.top_color = '#475F77'
+            self.menu.update(event)
 
 
 # Vérifie si ce fichier que ce fichier est exécuté et non importé.

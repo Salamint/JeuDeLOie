@@ -26,7 +26,7 @@ class Dice(pygame.sprite.Sprite):
             pass
 
 
-class Game(Task):
+class Game(Task, Savable):
     """
     Une classe représentant le jeu, elle se différencie par son utilisation et ses attributs :
     La classe Application gère le jeu et les composants graphiques de base (fenêtre),
@@ -49,38 +49,31 @@ class Game(Task):
         self.pause = False
         self.pause_menu = pygame.sprite.Group()
         self.pause_menu.add(
-            Button("Reprendre", (192, 192), self.resume),
-            Button("Sauvegarder", (192, 256), self.save),
-            Button("Quitter", (192, 320), self.quit)
+            Button("Reprendre", (256, 64), (192, 192), self.resume),
+            Button("Sauvegarder", (256, 64), (192, 256), self.save),
+            Button("Quitter", (256, 64), (192, 320), self.quit)
         )
 
         self.players: list[player.Player] = []
         self.turn = 0
-        self.start_time = time.perf_counter()
+        self.timer = time.perf_counter()
 
         self.add_player()
         self.stats = pygame.Surface((screen_size[0], 32))
 
+    def __getnewargs__(self) -> tuple:
+        return self.app,
+
     def __getstate__(self) -> dict:
         """"""
-        state = {
-            'file': self.file,
-            'turn': self.turn,
-            'board': self.board,
-            'players': self.players,
-            'elapsed': self.start_time,
-            'multiplayer': self.gameplay
-        }
+        state = self.__dict__.copy()
+        state['timer'] -= time.perf_counter()
         return state
 
     def __setstate__(self, state: dict):
         """"""
-        self.file = state.get('file', None)
-        self.turn = state.get('turn', 0)
-        self.board = state.get('board')
-        self.players = state.get('players', [])
-        self.start_time = state.get('elapsed', 0) - time.time()
-        self.gameplay = state.get('multiplayer', multiplayer.SAME_MACHINE)
+        state['timer'] += time.perf_counter()
+        self.__dict__ = state.copy()
 
     def add_player(self):
         """
@@ -102,7 +95,7 @@ class Game(Task):
         self.board.display()
         self.geese.draw(self.board.surface)
 
-        current_time = time.gmtime(time.perf_counter() - self.start_time)
+        current_time = time.gmtime(time.perf_counter() - self.timer)
         statistic_text = debug_font.render(
             time.strftime("Vous jouez depuis : %H:%M:%S", current_time),
             True, (255, 255, 255), (0, 0, 0)
@@ -147,20 +140,14 @@ class Game(Task):
 
         # Si le fichier n'existait pas.
         if self.file is None:
-
-            # Si le dossier des sauvegardes n'existe pas encore (première sauvegarde).
-            if not os.path.exists(SAVE_PATH):
-                # Crée le dossier des sauvegardes.
-                os.mkdir(SAVE_PATH)
-
             # Compte le nombre de fichiers dans le dossier des sauvegardes.
-            save_number = len(os.listdir(SAVE_PATH))
+            save_number = len(os.listdir(access_directory(SAVE_PATH)))
             # Stocke le nom du fichier de sauvegarde.
             self.file = f"{SAVE_PATH}/save#{save_number}.pickle"
 
         # Sauvegarde le jeu.
         with open(self.file, "wb") as file:
-            pickle.dump(self.__getstate__(), file)
+            pickle.dump(self, file)
 
     def update(self, event: pygame.event.Event):
         """
