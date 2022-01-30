@@ -12,7 +12,7 @@ import board
 
 # Définition des classes
 
-class Goose(pygame.sprite.Sprite):
+class Goose(pygame.sprite.Sprite, Savable):
     """
     Classe représentant l'oie que contrôle le joueur.
     """
@@ -34,7 +34,22 @@ class Goose(pygame.sprite.Sprite):
 
         self.position = 0
         self.last_position = 0
-        self.score = 0
+
+    def __getstate__(self) -> dict:
+        state = self.__dict__.copy()
+        state.update(
+            {
+                'color': self.color,
+                'position': self.position,
+                'last_position': self.last_position
+            }
+        )
+        return state
+
+    def __setstate__(self, state: dict):
+        self.__init__(None, state['color'])
+        self.position = state['position']
+        self.last_position = state['last_position']
 
     def change_color(self, new: str or tuple, old: str or tuple):
         """"""

@@ -71,7 +71,7 @@ def spiral(width: int, height: int, position: int, padding: int = 0) -> (int, in
 
 # Définition des classes
 
-class Board:
+class Board(Savable):
     """
     Une classe qui représente le plateau du jeu.
     """
@@ -89,7 +89,7 @@ class Board:
         )
         for x in range(width):
             for y in range(height):
-                board.add_tile("assets/tiles/default64.png", lambda: print("action!"))
+                board.add_tile("data/tiles/default.json")
         return board
 
     @staticmethod
@@ -133,23 +133,29 @@ class Board:
         self.width, self.height = size
 
         self.mapping = Board.generate(self.width, self.height)
-
         self.tiles = pygame.sprite.Group()
+
+        self.display()
     
     def __getstate__(self) -> dict:
         """"""
-        state = {
-            'size': (self.width, self.height)
-        }
+        state = self.__dict__.copy()
+        state.update(
+            {
+                'size': (self.width, self.height),
+                'tiles': [getattr(tile, "file") for tile in self.tiles]
+            }
+        )
         return state
     
     def __setstate__(self, state: dict):
         """"""
-        self.width, self.height = state.get("size", (8, 8))
+        size = state["size"]
+        self.__init__(pygame.Surface(Board.get_surface_size(*size)), size)
     
-    def add_tile(self, image: str, action: callable):
+    def add_tile(self, file: str):
         """"""
-        tile = Tile(self, image, self.get_at(len(self.tiles)), action)
+        tile = Tile(self, file, self.get_at(len(self.tiles)))
         tile.image.blit(
             pygame.font.SysFont("consolas", 16).render(f"{len(self.tiles)}", True, (255, 255, 255)),
             (8, 8)
@@ -172,7 +178,7 @@ class Board:
         return self.width * self.height
     
     def update(self, event: pygame.event.Event):
-        self.tiles.update()
+        self.tiles.update(event)
 
 
 class GooseAction:
@@ -189,6 +195,7 @@ class GooseAction:
         self.function(goose)
 
 
+# todo: documentation
 class Tile(pygame.sprite.Sprite):
     """
     Une classe qui représente une tuile du plateau.
@@ -201,13 +208,18 @@ class Tile(pygame.sprite.Sprite):
     WIDTH = 64
     HEIGHT = 64
 
-    def __init__(self, board: Board, image: str, position: tuple[int] or list[int], action: callable):
+    def __init__(self, board: Board, file: str, position: tuple[int] or list[int]):
+        """"""
         super().__init__()
-
-        self.action = action
         self.board = board
 
-        self.image = pygame.image.load(image).convert_alpha()
+        self.file = file
+
+        with open(self.file, "r") as file:
+            data = json.load(file)
+            self.action = data['action']
+            self.image = pygame.image.load(data['image']).convert_alpha()
+
         self.rect = self.image.get_rect()
         self.rect.x = position[0] * Tile.WIDTH
         self.rect.y = position[1] * Tile.HEIGHT
