@@ -7,7 +7,7 @@ from common import *
 import goose
 
 
-class Player:
+class Player(Savable):
     """
     Une classe représentant un joueur. Un joueur est en général plus qu'une simple oie,
     et contiendra des informations plus diverses, comme des statistiques ou l'adresse IPv4.
@@ -19,3 +19,17 @@ class Player:
         self.goose = goose.Goose(self, color)
     
     def play(self): ...
+
+    def __setstate__(self, state: dict):
+        self.id = state['id']
+        self.goose = state['goose']
+
+    def __getstate__(self) -> dict:
+        state = self.__dict__.copy()
+        state.update(
+            {
+                'id': self.id,
+                'goose': self.goose
+            }
+        )
+        return state

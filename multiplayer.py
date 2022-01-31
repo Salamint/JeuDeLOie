@@ -29,7 +29,7 @@ class Socket(socket.socket):
     le protocole UDP, SOCK_STREAM pour le protocole TCP).
 
     La différence entre les protocoles TCP (Transmission Control Protocol)
-    et UDP (User Datagram Protocol) est que le protocole UDP demande moins d'informations
+    et UDP (User Datagram Protocol) est que le protocole UDP demande moins d'informations,
     mais ne demande aucune confirmation de réception, et peut donc envoyer les paquets
     dans le désordre, et les paquets perdus ne seront pas réenvoyés, contrairement
     au protocole TCP.
@@ -71,28 +71,28 @@ class Socket(socket.socket):
         self.port = port
 
         # Définit le socket comme inutilisé (non-serveur et non-client)
-        self.type = Socket.UNUSED
+        self.connection = Socket.UNUSED
     
     def get_host(self):
         """
-        Retourne un tuple (<addresse_de_l_hote>, <port>) pour créer un serveur.
+        Retourne un tuple (<adresse_de_l_hôte>, <port>) pour créer un serveur.
         """
         return self.address, self.port
     
     def is_used(self) -> bool:
         """"""
-        return self.type != Socket.UNUSED
+        return self.connection != Socket.UNUSED
     
     def set_client(self, address: str, port: int = None):
         """
-        Marque ce socket comme utilisé en tant que serveur,et envoie une demande de connexion
+        Marque ce socket comme utilisé en tant que serveur et envoie une demande de connexion
         à un serveur.
-        `address`: L'adresse du serveur (IPv4).
-        `port`: Le port du serveur (valeur par défaut : Socket.PORT).
+        'address' : L'adresse du serveur (IPv4).
+        'port' : Le port du serveur (valeur par défaut : Socket.PORT).
         """
 
         # Lorsque le socket est déjà en cours d'utilisation, lève une erreur
-        if self.type != Socket.UNUSED:
+        if self.connection != Socket.UNUSED:
             raise socket.error("Ce socket est déjà utilisé !")
         
         # Valeur par défaut du port
@@ -100,22 +100,22 @@ class Socket(socket.socket):
             port = Socket.PORT
 
         # Se connecte au serveur
-        self.type = Socket.CLIENT
+        self.connection = Socket.CLIENT
         self.connect((address, port))
     
     def set_server(self, clients: int):
         """
-        Marque ce socket comme utilisé en tant que serveur,et attend la demande de connexion
+        Marque ce socket comme utilisé en tant que serveur et attend la demande de connexion
         de clients.
-        `clients`: Un entier, correspond au nombre maximum de client qui peut se connecter.
+        'clients' : Un entier, correspond au nombre maximum de client qui peut se connecter.
         """
         
         # Lorsque le socket est déjà en cours d'utilisation, lève une erreur
-        if self.type != Socket.UNUSED:
+        if self.connection != Socket.UNUSED:
             raise socket.error("Ce socket est déjà utilisé !")
 
         # Crée un serveur
-        self.type = Socket.SERVER
+        self.connection = Socket.SERVER
         self.bind(self.get_host())
 
         # Attend la demande de connexion de clients

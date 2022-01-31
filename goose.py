@@ -15,7 +15,7 @@ import board
 
 # Définition des classes
 
-class Goose(pygame.sprite.Sprite):
+class Goose(pygame.sprite.Sprite, Savable):
     """
     Classe représentant l'oie que contrôle le joueur.
     """
@@ -29,18 +29,37 @@ class Goose(pygame.sprite.Sprite):
         self.color = color
 
         self.image = pygame.image.load("assets/goose.png").convert_alpha()
-        for x in range(self.image.get_width()):
-            for y in range(self.image.get_height()):
-                if self.image.get_at((x, y)) == (255, 255, 255):
-                    self.image.set_at((x, y), self.color)
+        self.change_color(self.color, (255, 255, 255))
 
         self.rect = self.image.get_rect()
-        self.rect.x = 32
-        self.rect.y = 32
+        self.rect.x = 0
+        self.rect.y = 0
 
         self.position = 0
         self.last_position = 0
-        self.score = 0
+
+    def __getstate__(self) -> dict:
+        state = self.__dict__.copy()
+        state.update(
+            {
+                'color': self.color,
+                'position': self.position,
+                'last_position': self.last_position
+            }
+        )
+        return state
+
+    def __setstate__(self, state: dict):
+        self.__init__(None, state['color'])
+        self.position = state['position']
+        self.last_position = state['last_position']
+
+    def change_color(self, new: str or tuple, old: str or tuple):
+        """"""
+        for x in range(self.image.get_width()):
+            for y in range(self.image.get_height()):
+                if self.image.get_at((x, y)) == old:
+                    self.image.set_at((x, y), new)
     
     def goto(self, tile: int):
         """
@@ -100,4 +119,4 @@ class Goose(pygame.sprite.Sprite):
         self.rect.y = height * coordinates[1]
 
         index = len(self.player.game.geese) - self.player.id
-        self.rect.y -= 8 * index
+        self.rect.y -= 1 * index
