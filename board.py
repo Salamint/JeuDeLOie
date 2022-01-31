@@ -157,7 +157,7 @@ class Board(Savable):
         """"""
         tile = Tile(self, file, self.get_at(len(self.tiles)))
         tile.image.blit(
-            pygame.font.SysFont("consolas", 16).render(f"{len(self.tiles)}", True, (255, 255, 255)),
+            pygame.font.SysFont("consolas", 16).render(f"{len(self.tiles) + 1}", True, (0, 0, 0)),
             (8, 8)
         )
         self.tiles.add(tile)

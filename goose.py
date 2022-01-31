@@ -29,8 +29,8 @@ class Goose(pygame.sprite.Sprite, Savable):
         self.change_color(self.color, (255, 255, 255))
 
         self.rect = self.image.get_rect()
-        self.rect.x = 32
-        self.rect.y = 32
+        self.rect.x = 0
+        self.rect.y = 0
 
         self.position = 0
         self.last_position = 0
@@ -103,4 +103,4 @@ class Goose(pygame.sprite.Sprite, Savable):
         self.rect.y = height * coordinates[1]
 
         index = len(self.player.game.geese) - self.player.id
-        self.rect.y -= 8 * index
+        self.rect.y -= 1 * index

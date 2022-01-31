@@ -15,7 +15,7 @@ from common import *
 # Nom du jeu
 __title__ = "Jeu de l'oie"
 # Auteurs du jeu
-__authors__ = ["CelianJok", "soh-L", "Warna38", "Nagrom850"]
+__authors__ = ["CelianJok", "Nagrom850", "soh-L", "Warna38"]
 # License du jeu
 __license__ = "MIT License"
 # Version du jeu
