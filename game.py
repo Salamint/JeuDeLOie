@@ -61,14 +61,6 @@ class Dice(pygame.sprite.Sprite):
                         self.nbr_move += 6
 
 
-class Game(ITask):
-
-    def roll(self): ...
-
-    def update(self, event: pygame.event.Event):
-        if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
-            pass
-
 class Game(Task, Savable):
     """
     Une classe représentant le jeu, elle se différencie par son utilisation et ses attributs :
@@ -167,9 +159,8 @@ class Game(Task, Savable):
 
         self.app.screen.blit(self.stats, (0, 608))
 
-        self.app.screen.blit(self.board.surface, (0, 96))
-        self.app.screen.blit(self.dice_zone_one, (545, 200))
-        self.app.screen.blit(self.dice_zone_two, (545, 320))
+        self.app.screen.blit(self.dice_zone_one, (585, 200))
+        self.app.screen.blit(self.dice_zone_two, (585, 320))
         self.app.screen.blit(self.board.surface, (64, 64))
 
         if self.pause:
@@ -230,13 +221,5 @@ class Game(Task, Savable):
 
         self.play()
 
-        if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-            self.pause = not self.pause
 
-        if not self.pause:
-            self.board.update(event)
-            self.geese.update(event)
-            self.play()
-        else:
-            self.pause_menu.update(event)
 
