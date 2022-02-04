@@ -14,16 +14,51 @@ import player
 # Définition des classes
 
 class Dice(pygame.sprite.Sprite):
+    """
+    Classe représentant les deux dés qui pourront être lancés
+    par le joueur en appuyant sur la touche "espace". Les dés
+    sont lancés de façon aléatoire et ont six faces.
+    """
 
     def __init__(self):
 
         super().__init__()
 
-    def roll(self): ...
+        self.image = pygame.image.load("assets/dice/1.png").convert_alpha()
+        self.rect = self.image.get_rect()
+
+        self.nbr_move = 0
 
     def update(self, event: pygame.event.Event):
-        if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
-            pass
+        """
+        Change la face du dé en fonction du lancer de dé
+        (chiffre aléatoire entre 1 et 6) et compte le nombre
+        de cases que l'oie doit parcourir
+        """
+
+        self.nbr_move = 0
+
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_SPACE:
+                match roll_dice():
+                    case 1:
+                        self.image = pygame.image.load("assets/dice/1.png").convert_alpha()
+                        self.nbr_move += 1
+                    case 2:
+                        self.image = pygame.image.load("assets/dice/2.png").convert_alpha()
+                        self.nbr_move += 2
+                    case 3:
+                        self.image = pygame.image.load("assets/dice/3.png").convert_alpha()
+                        self.nbr_move += 3
+                    case 4:
+                        self.image = pygame.image.load("assets/dice/4.png").convert_alpha()
+                        self.nbr_move += 4
+                    case 5:
+                        self.image = pygame.image.load("assets/dice/5.png").convert_alpha()
+                        self.nbr_move += 5
+                    case 6:
+                        self.image = pygame.image.load("assets/dice/6.png").convert_alpha()
+                        self.nbr_move += 6
 
 
 class Game(Task, Savable):
@@ -61,6 +96,15 @@ class Game(Task, Savable):
         self.add_player()
         self.stats = pygame.Surface((screen_size[0], 32))
 
+        self.new_dice_one = Dice()
+        self.new_dice_two = Dice()
+        self.dice_one = pygame.sprite.Group()
+        self.dice_two = pygame.sprite.Group()
+
+        self.add_dices()
+        self.dice_zone_one = pygame.Surface((140, 320))
+        self.dice_zone_two = pygame.Surface((140, 320))
+
     def __getnewargs__(self) -> tuple:
         return self.app,
 
@@ -75,6 +119,7 @@ class Game(Task, Savable):
         state['timer'] += time.perf_counter()
         self.__dict__ = state.copy()
 
+
     def add_player(self):
         """
         Stocke un joueur dans la liste des joueurs et des oies.
@@ -88,12 +133,22 @@ class Game(Task, Savable):
             self.players.append(p)
             self.geese.add(p.goose)
 
+    def add_dices(self):
+        """
+        Stocke les dés nouvellement créés dans deux groupes différents
+        pour qu'ils soient indépendants l'un vis-à-vis de l'autre
+        """
+        self.new_dice_one.add(self.dice_one)
+        self.new_dice_two.add(self.dice_two)
+
     def display(self):
         """
         Affiche les modifications sur l'écran.
         """
         self.board.display()
         self.geese.draw(self.board.surface)
+        self.dice_one.draw(self.dice_zone_one)
+        self.dice_two.draw(self.dice_zone_two)
 
         current_time = time.gmtime(time.perf_counter() - self.timer)
         statistic_text = debug_font.render(
@@ -103,6 +158,9 @@ class Game(Task, Savable):
         self.stats.blit(statistic_text, center_surface(statistic_text, self.stats))
 
         self.app.screen.blit(self.stats, (0, 608))
+
+        self.app.screen.blit(self.dice_zone_one, (585, 200))
+        self.app.screen.blit(self.dice_zone_two, (585, 320))
         self.app.screen.blit(self.board.surface, (64, 64))
 
         if self.pause:
@@ -153,12 +211,15 @@ class Game(Task, Savable):
         """
         Met à jour le jeu, le plateau du jeu et les oies.
         """
-        if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-            self.pause = not self.pause
 
-        if not self.pause:
-            self.board.update(event)
-            self.geese.update(event)
-            self.play()
-        else:
-            self.pause_menu.update(event)
+        nbr_move = self.new_dice_one.nbr_move + self.new_dice_two.nbr_move
+
+        self.board.update(event)
+        self.geese.update(event, nbr_move)
+        self.dice_one.update(event)
+        self.dice_two.update(event)
+
+        self.play()
+
+
+
