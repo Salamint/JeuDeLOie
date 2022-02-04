@@ -4,10 +4,10 @@ Ceci est un projet de NSI pour classe de Seconde Générale.
 """
 
 # Import de 'common.py'
-from common import *
+import pygame
 
-# Import des autres fichiers
 import game
+from common import *
 
 
 # variables globales de signature (version, auteurs, license, droits...)
@@ -15,7 +15,7 @@ import game
 # Nom du jeu
 __title__ = "Jeu de l'oie"
 # Auteurs du jeu
-__authors__ = ["CelianJok", "soh-L", "Warna38", "Nagrom850"]
+__authors__ = ["CelianJok", "Nagrom850", "soh-L", "Warna38"]
 # License du jeu
 __license__ = "MIT License"
 # Version du jeu
@@ -43,7 +43,7 @@ def main():
 
 # Définition des classes
 
-class Application:
+class Application(Application):
     """
     Une classe représentant une application.
     Cette classe est le point de départ du programme,
@@ -56,8 +56,11 @@ class Application:
         Récupère l'écran global dans common, change le titre par le titre du programme
         et change l'icône de la fenêtre.
         """
-        self.screen = screen
-        self.running = True
+
+        # Appelle le constructeur de la super classe
+        super().__init__(screen, TitleScreen)
+        # Stoppe le jeu
+        self.running = False
 
         # Change le titre de l'application
         pygame.display.set_caption(__title__)
@@ -65,7 +68,6 @@ class Application:
         pygame.display.set_icon(pygame.image.load("assets/goose.png").convert_alpha())
 
         self.clock = pygame.time.Clock()
-        self.task = game.Game(self)
 
     def display(self):
         """
@@ -102,6 +104,9 @@ class Application:
         ainsi que créer des décalages entre différentes machines.
         """
 
+        # Démarre le jeu
+        self.running = True
+
         # Tant que le jeu est lancé (un tour de boucle par frame).
         while self.running:
 
@@ -123,6 +128,100 @@ class Application:
             
             # Régule le jeu à 60 fps.
             self.clock.tick(144)
+
+
+# todo: documentation
+class TitleScreen(Task):
+    """
+    Classe représentant l'écran de démarrage du jeu.
+    """
+
+    def __init__(self, app: Application):
+        """"""
+        # Appel du constructeur de la superclasse.
+        super().__init__(app)
+
+        # Images et surfaces de base.
+        text = sans_font.render("Le Jeu De L'Oie", True, (255, 255, 255))
+        goose = pygame.image.load("assets/goose.png").convert_alpha()
+
+        # Titre.
+        self.title = pygame.Surface((self.app.screen.get_width() - 64, 64))
+        self.title.blit(goose, (0, 0))
+        self.title.blit(text, (64, -16))
+        self.title.blit(goose, (512, 0))
+        self.title_position = (32, 64)
+
+        # Menu principal.
+        self.menu = pygame.sprite.Group()
+        self.menu.add(
+            PushButton("Nouvelle Partie", (256, 64), (192, 384), self.play),
+            PushButton("Charger", (256, 64), (192, 480), self.save_select)
+        )
+
+        # Menu des sauvegardes.
+        self.select = False
+        self.saves = pygame.sprite.Group()
+        self.save_selector = pygame.Surface((256, 384))
+        self.save_selector_rect = pygame.Rect(192, 192, 256, 384)
+        self.back_button = PushButton("Retour", (128, 64), (32, 512), self.main)
+
+    def display(self):
+        """"""
+        screen.blit(self.title, self.title_position)
+        if self.select:
+            rect = self.save_selector_rect.copy()
+            rect.x -= 4
+            rect.y -= 4
+            rect.width += 8
+            rect.height += 8
+            pygame.draw.rect(self.app.screen, '#FFFFFF', rect)
+            self.save_selector.fill('#000000')
+            self.saves.draw(self.save_selector)
+            self.app.screen.blit(self.save_selector, self.save_selector_rect)
+            self.app.screen.blit(self.back_button.image, self.back_button.rect)
+        else:
+            self.menu.draw(self.app.screen)
+
+    def load(self, name: str):
+        with open(name, "rb") as file:
+            self.app.task = pickle.load(file, encoding="UTF-8")
+
+    def main(self):
+        self.select = False
+
+    def play(self):
+        """"""
+        self.app.task = game.Game(self.app)
+
+    def save_select(self):
+        """"""
+        self.saves.empty()
+
+        height = 8
+        for file in os.listdir(access_directory(SAVE_PATH)):
+            path = f"{SAVE_PATH}/{file}"
+            if os.path.isfile(path):
+                self.saves.add(
+                    PushButton(file, (256, 64), (0, height), lambda: self.load(path)))
+            height += 96
+
+        self.select = True
+
+    def update(self, event: pygame.event.Event):
+        """"""
+        if self.select:
+            if event.type == pygame.MOUSEWHEEL:
+                if event.y < 0:
+                    for sprite in self.saves:
+                        sprite.rect.y -= 96
+                if event.y > 0:
+                    for sprite in self.saves:
+                        sprite.rect.y += 96
+            self.saves.update(event, (192, 192))
+            self.back_button.update(event)
+        else:
+            self.menu.update(event)
 
 
 # Vérifie si ce fichier que ce fichier est exécuté et non importé.

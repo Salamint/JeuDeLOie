@@ -14,22 +14,54 @@ import player
 # Définition des classes
 
 class Dice(pygame.sprite.Sprite):
+    """
+    Classe représentant les deux dés qui pourront être lancés
+    par le joueur en appuyant sur la touche "espace". Les dés
+    sont lancés de façon aléatoire et ont six faces.
+    """
 
     def __init__(self):
 
         super().__init__()
 
-    def roll(self):
-        ...
+        self.image = pygame.image.load("assets/dice/1.png").convert_alpha()
+        self.rect = self.image.get_rect()
+
+        self.nbr_move = 0
 
     def update(self, event: pygame.event.Event):
+        """
+        Change la face du dé en fonction du lancer de dé
+        (chiffre aléatoire entre 1 et 6) et compte le nombre
+        de cases que l'oie doit parcourir
+        """
+
+        self.nbr_move = 0
 
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_SPACE:
-                ...
+                match roll_dice():
+                    case 1:
+                        self.image = pygame.image.load("assets/dice/1.png").convert_alpha()
+                        self.nbr_move += 1
+                    case 2:
+                        self.image = pygame.image.load("assets/dice/2.png").convert_alpha()
+                        self.nbr_move += 2
+                    case 3:
+                        self.image = pygame.image.load("assets/dice/3.png").convert_alpha()
+                        self.nbr_move += 3
+                    case 4:
+                        self.image = pygame.image.load("assets/dice/4.png").convert_alpha()
+                        self.nbr_move += 4
+                    case 5:
+                        self.image = pygame.image.load("assets/dice/5.png").convert_alpha()
+                        self.nbr_move += 5
+                    case 6:
+                        self.image = pygame.image.load("assets/dice/6.png").convert_alpha()
+                        self.nbr_move += 6
 
 
-class Game(ITask):
+class Game(Task, Savable):
     """
     Une classe représentant le jeu, elle se différencie par son utilisation et ses attributs :
     La classe Application gère le jeu et les composants graphiques de base (fenêtre),
@@ -39,9 +71,11 @@ class Game(ITask):
     display et update.
     """
 
-    def __init__(self, app):
-        self.app = app
+    def __init__(self, app: Application):
+        super().__init__(app)
         self.file = None
+
+        self.is_playing = False
 
         self.board = board.Board.default(8, 8)
         self.gameplay = multiplayer.SAME_MACHINE
@@ -50,38 +84,41 @@ class Game(ITask):
         self.pause = False
         self.pause_menu = pygame.sprite.Group()
         self.pause_menu.add(
-            Button("Reprendre", (192, 224), self.resume),
-            Button("Sauvegarder", (192, 288), self.save),
-            Button("Quitter", (192, 352), self.quit)
+            Button("Reprendre", (256, 64), (192, 192), self.resume),
+            Button("Sauvegarder", (256, 64), (192, 256), self.save),
+            Button("Quitter", (256, 64), (192, 320), self.quit)
         )
 
         self.players: list[player.Player] = []
         self.turn = 0
-        self.start_time = time.perf_counter()
+        self.timer = time.perf_counter()
 
         self.add_player()
         self.stats = pygame.Surface((screen_size[0], 32))
 
+        self.new_dice_one = Dice()
+        self.new_dice_two = Dice()
+        self.dice_one = pygame.sprite.Group()
+        self.dice_two = pygame.sprite.Group()
+
+        self.add_dices()
+        self.dice_zone_one = pygame.Surface((140, 320))
+        self.dice_zone_two = pygame.Surface((140, 320))
+
+    def __getnewargs__(self) -> tuple:
+        return self.app,
+
     def __getstate__(self) -> dict:
         """"""
-        state = {
-            'file': self.file,
-            'turn': self.turn,
-            'board': self.board,
-            'players': self.players,
-            'elapsed': self.start_time,
-            'multiplayer': self.gameplay
-        }
+        state = self.__dict__.copy()
+        state['timer'] -= time.perf_counter()
         return state
 
     def __setstate__(self, state: dict):
         """"""
-        self.file = state.get('file', None)
-        self.turn = state.get('turn', 0)
-        self.board = state.get('board')
-        self.players = state.get('players', [])
-        self.start_time = state.get('elapsed', 0) - time.time()
-        self.gameplay = state.get('multiplayer', multiplayer.SAME_MACHINE)
+        state['timer'] += time.perf_counter()
+        self.__dict__ = state.copy()
+
 
     def add_player(self):
         """
@@ -96,22 +133,35 @@ class Game(ITask):
             self.players.append(p)
             self.geese.add(p.goose)
 
+    def add_dices(self):
+        """
+        Stocke les dés nouvellement créés dans deux groupes différents
+        pour qu'ils soient indépendants l'un vis-à-vis de l'autre
+        """
+        self.new_dice_one.add(self.dice_one)
+        self.new_dice_two.add(self.dice_two)
+
     def display(self):
         """
         Affiche les modifications sur l'écran.
         """
         self.board.display()
         self.geese.draw(self.board.surface)
+        self.dice_one.draw(self.dice_zone_one)
+        self.dice_two.draw(self.dice_zone_two)
 
-        current_time = time.gmtime(time.perf_counter() - self.start_time)
-        statistic_text = font.render(
+        current_time = time.gmtime(time.perf_counter() - self.timer)
+        statistic_text = debug_font.render(
             time.strftime("Vous jouez depuis : %H:%M:%S", current_time),
             True, (255, 255, 255), (0, 0, 0)
         )
         self.stats.blit(statistic_text, center_surface(statistic_text, self.stats))
 
         self.app.screen.blit(self.stats, (0, 608))
-        self.app.screen.blit(self.board.surface, (64, 96))
+
+        self.app.screen.blit(self.dice_zone_one, (585, 200))
+        self.app.screen.blit(self.dice_zone_two, (585, 320))
+        self.app.screen.blit(self.board.surface, (64, 64))
 
         if self.pause:
             self.pause_menu.draw(self.app.screen)
@@ -127,14 +177,14 @@ class Game(ITask):
             self.turn = 0
 
     def play(self):
+        self.is_playing = True
         self.players[self.turn].play()
 
     def quit(self):
         """
         Quitte le jeu en remplaçant la tâche en cours par l'écran titre.
         """
-        # todo : Créer l'écran titre et remplacer 'None' par l'écran titre
-        self.app.task = None
+        self.app.task = self.app.default_task(self.app)
 
     def resume(self):
         """"""
@@ -148,31 +198,28 @@ class Game(ITask):
 
         # Si le fichier n'existait pas.
         if self.file is None:
-
-            # Si le dossier des sauvegardes n'existe pas encore (première sauvegarde).
-            if not os.path.exists(SAVE_PATH):
-                # Crée le dossier des sauvegardes.
-                os.mkdir(SAVE_PATH)
-
             # Compte le nombre de fichiers dans le dossier des sauvegardes.
-            save_number = len(os.listdir(SAVE_PATH))
+            save_number = len(os.listdir(access_directory(SAVE_PATH)))
             # Stocke le nom du fichier de sauvegarde.
-            self.file = f"{SAVE_PATH}/save#{save_number}.bin"
+            self.file = f"{SAVE_PATH}/save#{save_number}.pickle"
 
         # Sauvegarde le jeu.
         with open(self.file, "wb") as file:
-            pickle.dump(self.__getstate__(), file)
+            pickle.dump(self, file)
 
     def update(self, event: pygame.event.Event):
         """
         Met à jour le jeu, le plateau du jeu et les oies.
         """
-        if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-            self.pause = not self.pause
 
-        if not self.pause:
-            self.board.update(event)
-            self.geese.update(event)
-            self.play()
-        else:
-            self.pause_menu.update(event)
+        nbr_move = self.new_dice_one.nbr_move + self.new_dice_two.nbr_move
+
+        self.board.update(event)
+        self.geese.update(event, nbr_move)
+        self.dice_one.update(event)
+        self.dice_two.update(event)
+
+        self.play()
+
+
+
