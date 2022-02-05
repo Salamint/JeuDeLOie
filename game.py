@@ -87,7 +87,7 @@ class Game(Task, Savable):
         self.file = None
 
         # Création du plateau de jeu
-        self.board = board.Board.default(8, 8)
+        self.board = board.Board.from_file("data/board.json")
         # Mode de jeu (multijoueur)
         self.multiplayer = multiplayer.SAME_MACHINE
         # Groupe de sprites d'oies
