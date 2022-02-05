@@ -77,14 +77,20 @@ def access_directory(directory: str) -> str:
     return directory
 
 
+# todo: documentation
+def center_height(height: int, container: int):
+    """"""
+    return container // 2 - height // 2
+
+
 def center_rect(rect: pygame.Rect, container: pygame.Rect) -> (int, int):
     """
     Une fonction permettant de centrer une surface à l'intérieur d'une autre surface.
     Renvoie uniquement des coordonnées, ne modifie aucune des deux surfaces.
     """
     return (
-        container.width // 2 - rect.width // 2,
-        container.height // 2 - rect.height // 2
+        center_width(rect.width, container.width),
+        center_height(rect.height, container.height)
     )
 
 
@@ -93,12 +99,18 @@ def center_surface(surface: pygame.Surface, container: pygame.Surface) -> (int, 
     Une fonction permettant de centrer une surface à l'intérieur d'une autre surface.
     Renvoie uniquement des coordonnées, ne modifie aucune des deux surfaces.
     """
-    text_width, text_height = surface.get_size()
+    content_width, content_height = surface.get_size()
     container_width, container_height = container.get_size()
     return (
-        container_width // 2 - text_width // 2,
-        container_height // 2 - text_height // 2
+        center_width(content_width, container_width),
+        center_height(content_height, container_height)
     )
+
+
+# todo: documentation
+def center_width(width: int, container: int):
+    """"""
+    return container // 2 - width // 2
 
 
 def roll_dice() -> int:

@@ -4,9 +4,6 @@ ainsi que les déclarations de variables en rapport avec l'élément 'oie'.
 """
 
 # Import de 'common.py'
-import pygame.time
-
-import main
 from common import *
 
 # Import d'autres fichiers

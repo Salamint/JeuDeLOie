@@ -24,6 +24,10 @@ class Dice(pygame.sprite.Sprite):
 
         super().__init__()
 
+        self.dices = [
+            pygame.image.load(f"assets/dice/{number + 1}.png").convert_alpha()
+            for number in range(6)
+        ]
         self.image = pygame.image.load("assets/dice/1.png").convert_alpha()
         self.rect = self.image.get_rect()
 
@@ -36,29 +40,18 @@ class Dice(pygame.sprite.Sprite):
         de cases que l'oie doit parcourir
         """
 
+        # Nombre de mouvements réalisés
         self.nbr_move = 0
 
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_SPACE:
-                match roll_dice():
-                    case 1:
-                        self.image = pygame.image.load("assets/dice/1.png").convert_alpha()
-                        self.nbr_move += 1
-                    case 2:
-                        self.image = pygame.image.load("assets/dice/2.png").convert_alpha()
-                        self.nbr_move += 2
-                    case 3:
-                        self.image = pygame.image.load("assets/dice/3.png").convert_alpha()
-                        self.nbr_move += 3
-                    case 4:
-                        self.image = pygame.image.load("assets/dice/4.png").convert_alpha()
-                        self.nbr_move += 4
-                    case 5:
-                        self.image = pygame.image.load("assets/dice/5.png").convert_alpha()
-                        self.nbr_move += 5
-                    case 6:
-                        self.image = pygame.image.load("assets/dice/6.png").convert_alpha()
-                        self.nbr_move += 6
+        # Si une touche est pressée, et qu'il s'agit de la barre espace
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+
+            # Stocke le résultat du lancé de dé
+            result = roll_dice()
+            # Change l'image du dé au nombre correspondant
+            self.image = self.dices[result - 1]
+            # Stocke le nombre de mouvements à réaliser
+            self.nbr_move += result
 
 
 class Game(Task, Savable):
@@ -118,7 +111,6 @@ class Game(Task, Savable):
         """"""
         state['timer'] += time.perf_counter()
         self.__dict__ = state.copy()
-
 
     def add_player(self):
         """
@@ -220,6 +212,3 @@ class Game(Task, Savable):
         self.dice_two.update(event)
 
         self.play()
-
-
-
