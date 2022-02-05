@@ -62,7 +62,7 @@ class Goose(pygame.sprite.Sprite, Savable):
         """
         Déplace l'oie sur une case en particulier.
         """
-        if 0 <= tile < self.player.game.board.size:
+        if 0 <= tile < self.player.game.board.size - 1:
             self.last_position = self.position
             self.position = tile
     
@@ -92,7 +92,7 @@ class Goose(pygame.sprite.Sprite, Savable):
         while nbr_move > 0:
 
             # Si l'oie n'arrive pas pile sur la case 63, il doit reculer du nombre de cases qu'il a dépassé
-            if self.position == 63 and nbr_move + self.position > 63:
+            if self.position == 62 and nbr_move + self.position > 62:
                 self.move_back(nbr_move)
                 nbr_move -= nbr_move
             else:  # Sinon il avance normalement
