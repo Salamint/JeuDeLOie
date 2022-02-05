@@ -171,8 +171,10 @@ class TitleScreen(Task):
         # Menu des sauvegardes
         self.select = False
         self.saves = pygame.sprite.Group()
-        self.save_selector = pygame.Surface((256, 384))
-        self.save_selector_rect = pygame.Rect(192, 192, 256, 384)
+        save_selector_size = (256, 384)
+        self.save_selector_position = (center_width(save_selector_size[0], self.app.screen.get_width()), 192)
+        self.save_selector = pygame.Surface(save_selector_size)
+        self.save_selector_rect = pygame.Rect(*self.save_selector_position, *save_selector_size)
 
         def back():
             """
@@ -182,7 +184,7 @@ class TitleScreen(Task):
             """
             self.select = False
 
-        self.back_button = PushButton("Retour", (128, 64), (32, 512), back)
+        self.back_button = PushButton("Retour", (128, 64), (128, 512), back)
 
         # Calculs du rectangle des bordures
         self.border_rect = self.save_selector_rect.copy()
@@ -249,7 +251,7 @@ class TitleScreen(Task):
         self.saves.empty()
 
         # Hauteur par défaut
-        height = 8
+        height = 16
 
         # Pour chaque fichier ou dossier contenu dans 'data/saves'
         for file in os.listdir(access_directory(SAVE_PATH)):
@@ -297,7 +299,7 @@ class TitleScreen(Task):
                         sprite.rect.y += 96
 
             # Met à jour les boutons des sauvegardes
-            self.saves.update(event, (192, 192))
+            self.saves.update(event, self.save_selector_position)
             # Met à jour le bouton de retour
             self.back_button.update(event)
 
