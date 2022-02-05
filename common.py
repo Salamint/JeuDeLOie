@@ -77,9 +77,10 @@ def access_directory(directory: str) -> str:
     return directory
 
 
-# todo: documentation
 def center_height(height: int, container: int):
-    """"""
+    """
+    Centre une hauteur à partir d'une première hauteur, et d'une hauteur servant de conteneur.
+    """
     return container // 2 - height // 2
 
 
@@ -107,9 +108,10 @@ def center_surface(surface: pygame.Surface, container: pygame.Surface) -> (int, 
     )
 
 
-# todo: documentation
 def center_width(width: int, container: int):
-    """"""
+    """
+    Centre une largeur à partir d'une première largeur, et d'une largeur servant de conteneur.
+    """
     return container // 2 - width // 2
 
 
@@ -122,7 +124,6 @@ def roll_dice() -> int:
 
 # Définition des classes et interfaces
 
-# todo : documentation
 class Application(abc.ABC):
     """
     Classe abstraite représentant une application.
@@ -134,24 +135,33 @@ class Application(abc.ABC):
     """
 
     def __init__(self, __screen: pygame.Surface, task: type):
-        """"""
+        """
+        Construit une nouvelle instance d'une application avec des attributs par défaut.
+        Une application doit avoir un écran, une tâche et une tâche par défaut.
+        """
         self.screen = __screen
         self.default_task: type = task
         self.task: Task = self.default_task(self)
 
     @abc.abstractmethod
     def display(self):
-        """"""
+        """
+        Méthode abstraite à implémenter servant à l'affichage de l'application sur un écran.
+        """
         pass
 
     @abc.abstractmethod
     def quit(self):
-        """"""
+        """
+        Méthode abstraite à implémenter qui ferme l'application en cours.
+        """
         pass
 
     @abc.abstractmethod
     def start(self):
-        """"""
+        """
+        Méthode abstraite à implémenter qui démarre l'application en cours.
+        """
         pass
 
 
@@ -343,7 +353,6 @@ class PushButton(Button):
             self.hovering = False
 
 
-# todo: documentation
 class Savable(abc.ABC):
     """
     Classe abstraite représentant une tâche.
@@ -356,12 +365,18 @@ class Savable(abc.ABC):
 
     @abc.abstractmethod
     def __getstate__(self) -> dict:
-        """"""
+        """
+        Méthode abstraite à implémenter qui sert à la sauvegarde de l'objet.
+        Doit retourner un dictionnaire des attributs, et ne demande aucun argument.
+        """
         pass
 
     @abc.abstractmethod
     def __setstate__(self, state: dict):
-        """"""
+        """
+        Méthode abstraite à implémenter qui sert au chargement de l'objet.
+        Ne dois rien retourner et demande un dictionnaire des attributs en argument.
+        """
         pass
 
 
@@ -376,8 +391,10 @@ class Task(abc.ABC):
     """
 
     def __init__(self, app: Application):
-        # todo: documentation
-        """"""
+        """
+        Construit une nouvelle instance d'une tâche avec des attributs par défaut.
+        Une tâche doit être associée avec une application.
+        """
         self.app = app
 
     @abc.abstractmethod
