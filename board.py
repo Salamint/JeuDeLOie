@@ -71,6 +71,7 @@ def spiral(width: int, height: int, position: int, padding: int = 0) -> (int, in
 
 # Définition des classes
 
+# todo: documentation
 class Board(Savable):
     """
     Une classe qui représente le plateau du jeu.

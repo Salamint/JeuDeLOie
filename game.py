@@ -20,18 +20,28 @@ class Dice(pygame.sprite.Sprite):
     sont lancés de façon aléatoire et ont six faces.
     """
 
-    def __init__(self):
+    def __init__(self, position: (int, int)):
+        """
+        Construit une nouvelle instance de dé
+        """
 
+        # Appel le constructeur de la superclasse
         super().__init__()
 
+        # Nombre de mouvements à réaliser
+        self.nbr_move = 0
+
+        # Liste contenant tous les sprites de dés allant de 1 à 6
         self.dices = [
             pygame.image.load(f"assets/dice/{number + 1}.png").convert_alpha()
             for number in range(6)
         ]
-        self.image = pygame.image.load("assets/dice/1.png").convert_alpha()
-        self.rect = self.image.get_rect()
 
-        self.nbr_move = 0
+        # Image par défaut à 0 (1 point)
+        self.image = self.dices[0]
+        # Rectangle (position et taille)
+        self.rect = self.image.get_rect()
+        self.rect.x, self.rect.y = position
 
     def update(self, event: pygame.event.Event):
         """
@@ -65,16 +75,27 @@ class Game(Task, Savable):
     """
 
     def __init__(self, app: Application):
+        """
+        Construit une nouvelle instance de Game.
+        Un jeu à des joueurs, un plateau, es dés, des règles et des statistiques.
+        Il peut être mis en pause avec la méthode pause et être rétabli avec la méthode resume.
+        """
+
+        # Appel du constructeur de la superclasse
         super().__init__(app)
+        # fichier dans lequel la partie est enregistrée
         self.file = None
 
-        self.is_playing = False
-
+        # Création du plateau de jeu
         self.board = board.Board.default(8, 8)
-        self.gameplay = multiplayer.SAME_MACHINE
+        # Mode de jeu (multijoueur)
+        self.multiplayer = multiplayer.SAME_MACHINE
+        # Groupe de sprites d'oies
         self.geese = pygame.sprite.Group()
 
-        self.pause = False
+        # L'état du jeu (en pause ou pas), attribut privé, accessible depuis les méthodes pause et resume
+        self.__pause = False
+        # Menu de pause
         self.pause_menu = pygame.sprite.Group()
         self.pause_menu.add(
             Button("Reprendre", (256, 64), (192, 192), self.resume),
@@ -82,22 +103,31 @@ class Game(Task, Savable):
             Button("Quitter", (256, 64), (192, 320), self.quit)
         )
 
+        # Liste des joueurs
         self.players: list[player.Player] = []
+        # Tour de jeu
         self.turn = 0
-        self.timer = time.perf_counter()
+        # Si un joueur est en train de jouer
+        self.is_playing = False
 
-        self.add_player()
+        # Un chronomètre de la partie
+        self.timer = time.perf_counter()
+        # Surface d'affichage des statistiques
         self.stats = pygame.Surface((screen_size[0], 32))
 
-        self.new_dice_one = Dice()
-        self.new_dice_two = Dice()
-        self.dice_one = pygame.sprite.Group()
-        self.dice_two = pygame.sprite.Group()
+        self.add_player()
 
-        self.add_dices()
-        self.dice_zone_one = pygame.Surface((140, 320))
-        self.dice_zone_two = pygame.Surface((140, 320))
+        # Crée un groupe de dés
+        self.dices = pygame.sprite.Group()
+        # Définit leur emplacement en x qui est identique
+        dices_x = center_width(64, 274) + 576
+        # Ajoute les dés
+        self.dices.add(
+            Dice((dices_x, 128)),
+            Dice((dices_x, 448))
+        )
 
+    # todo: améliorer les sauvegardes et documenter les méthodes spécifiées
     def __getnewargs__(self) -> tuple:
         return self.app,
 
@@ -125,37 +155,36 @@ class Game(Task, Savable):
             self.players.append(p)
             self.geese.add(p.goose)
 
-    def add_dices(self):
-        """
-        Stocke les dés nouvellement créés dans deux groupes différents
-        pour qu'ils soient indépendants l'un vis-à-vis de l'autre
-        """
-        self.new_dice_one.add(self.dice_one)
-        self.new_dice_two.add(self.dice_two)
-
     def display(self):
         """
         Affiche les modifications sur l'écran.
         """
-        self.board.display()
-        self.geese.draw(self.board.surface)
-        self.dice_one.draw(self.dice_zone_one)
-        self.dice_two.draw(self.dice_zone_two)
 
+        # Affiche le plateau de jeu
+        self.board.display()
+        # Affiche les oies
+        self.geese.draw(self.board.surface)
+
+        # Récupère le temps écoulé depuis le début de la partie et en fait une structure de temps
         current_time = time.gmtime(time.perf_counter() - self.timer)
+        # Formate le temps de la manière %H:%M:%S
         statistic_text = debug_font.render(
             time.strftime("Vous jouez depuis : %H:%M:%S", current_time),
             True, (255, 255, 255), (0, 0, 0)
         )
+        # Affiche l'heure sur la surface des statistiques
         self.stats.blit(statistic_text, center_surface(statistic_text, self.stats))
 
+        # Affiche sur l'écran les statistiques
         self.app.screen.blit(self.stats, (0, 608))
-
-        self.app.screen.blit(self.dice_zone_one, (585, 200))
-        self.app.screen.blit(self.dice_zone_two, (585, 320))
+        # Affiche sur l'écran la surface du plateau
         self.app.screen.blit(self.board.surface, (64, 64))
+        # Affiche les dés
+        self.dices.draw(self.app.screen)
 
-        if self.pause:
+        # Si le jeu est en pause
+        if self.__pause:
+            # Afficher le menu de pause
             self.pause_menu.draw(self.app.screen)
 
     def next_turn(self):
@@ -163,14 +192,27 @@ class Game(Task, Savable):
         Passe au tour de l'oie suivante, si la dernière oie à déjà jouée,
         c'est donc au tour de la première oie.
         """
+
+        # S'il reste des joueurs qui n'ont pas encore joué
         if self.turn < len(self.players) - 1:
+            # Passer au joueur suivant
             self.turn += 1
+        # Sinon
         else:
+            # Reprendre depuis le début
             self.turn = 0
 
+    # todo: revoir cette méthode
     def play(self):
         self.is_playing = True
         self.players[self.turn].play()
+
+    def pause(self):
+        """
+        Met le jeu en pause, empêche les éléments tels que le plateau ou les dés d'être mis à jour,
+        mais continuera de les afficher.
+        """
+        self.__pause = True
 
     def quit(self):
         """
@@ -179,8 +221,10 @@ class Game(Task, Savable):
         self.app.task = self.app.default_task(self.app)
 
     def resume(self):
-        """"""
-        self.pause = False
+        """
+        Rétablit le jeu là où il s'était arrêté et arrête la pause.
+        """
+        self.__pause = False
 
     def save(self):
         """
@@ -188,27 +232,55 @@ class Game(Task, Savable):
         ou lors de la première sauvegarde, crée un fichier de sauvegarde.
         """
 
-        # Si le fichier n'existait pas.
+        # Si le fichier n'existait pas
         if self.file is None:
-            # Compte le nombre de fichiers dans le dossier des sauvegardes.
+            # Compte le nombre de fichiers dans le dossier des sauvegardes
             save_number = len(os.listdir(access_directory(SAVE_PATH)))
-            # Stocke le nom du fichier de sauvegarde.
+            # Stocke le nom du fichier de sauvegarde
             self.file = f"{SAVE_PATH}/save#{save_number}.pickle"
 
-        # Sauvegarde le jeu.
+        # Sauvegarde le jeu
         with open(self.file, "wb") as file:
             pickle.dump(self, file)
 
     def update(self, event: pygame.event.Event):
         """
-        Met à jour le jeu, le plateau du jeu et les oies.
+        Met à jour le jeu.
+        Lorsque le jeu est en pause, les boutons du menu de pause sont mis à jour,
+        mais les autres éléments sont bloqués et ne sont pas mis à jour.
+        Lorsque le jeu n'est pas en pause, le menu de pause n'est pas mis à jour,
+        et le plateau du jeu, les oies et les dés le sont.
         """
 
-        nbr_move = self.new_dice_one.nbr_move + self.new_dice_two.nbr_move
+        # Si le jeu est en pause
+        if self.__pause:
 
-        self.board.update(event)
-        self.geese.update(event, nbr_move)
-        self.dice_one.update(event)
-        self.dice_two.update(event)
+            # Si la touche espace est pressée
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                # Rétablir le jeu
+                self.resume()
 
-        self.play()
+            # Met à jour les boutons de l'écran de pause
+            self.pause_menu.update(event)
+
+        # Si l'écran n'est pas en pause
+        else:
+
+            # Si la touche espace est pressée
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                # Mettre le jeu en pause
+                self.pause()
+
+            # Le nombre de cases que l'oie en cours de jeu doit parcourir
+            nbr_move = 0
+            for dice in self.dices:
+                nbr_move += getattr(dice, 'nbr_move', 0)
+
+            # Met à jour le plateau de jeu
+            self.board.update(event)
+            # Met à jour les oies
+            self.geese.update(event, nbr_move)
+            # Met à jour les dés
+            self.dices.update(event)
+            # Met à jour le tour de jeu
+            self.play()

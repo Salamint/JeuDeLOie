@@ -199,7 +199,7 @@ class TitleScreen(Task):
 
         Affiche dans tous les cas le titre du jeu, puis, si l'utilisateur se trouve dans le menu des sauvegardes,
         affiche toutes les sauvegardes disponibles, avec un bouton de retour.
-        Sinon, affiche un bouton pour lancer une nouvelle partie, et un bouton pour charger une partie existante.
+        Sinon, affiche un bouton pour lancer une nouvelle partie et un bouton pour charger une partie existante.
         """
 
         # Affiche le titre
