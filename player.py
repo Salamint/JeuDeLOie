@@ -16,9 +16,21 @@ class Player(Savable):
     def __init__(self, game, identifier: int, color: list[int] or tuple[int]):
         self.game = game
         self.id = identifier
+        self.finished = False
         self.goose = goose.Goose(self, color)
-    
-    def play(self): ...
+
+    def forward(self, tiles: int):
+        """
+        Semblable à self.goose.move_forward() mais fait reculer l'oie lorsqu'elle va trop loin.
+        """
+
+        if not self.finished:
+
+            if not self.goose.move_forward(tiles):
+                self.goose.move_back(tiles)
+
+            if self.goose.position == self.game.board.size - 1:
+                self.finished = True
 
     def __setstate__(self, state: dict):
         self.id = state['id']

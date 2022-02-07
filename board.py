@@ -71,26 +71,11 @@ def spiral(width: int, height: int, position: int, padding: int = 0) -> (int, in
 
 # Définition des classes
 
+# todo: documentation
 class Board(Savable):
     """
     Une classe qui représente le plateau du jeu.
     """
-
-    # todo: remplacer par la méthode `from_file`.
-    @staticmethod
-    def default(width: int, height: int):
-        """
-        CETTE METHODE EST TEMPORAIRE, A REMPLACER PAR LA METHODE `from_file`,
-        QUI CHARGE UN FICHIER PLATEAU.
-        """
-        board = Board(
-            pygame.Surface(Board.get_surface_size(width, height)),
-            (width, height)
-        )
-        for x in range(width):
-            for y in range(height):
-                board.add_tile("data/tiles/default.json")
-        return board
 
     @staticmethod
     def from_file(file_name: str):
@@ -99,8 +84,13 @@ class Board(Savable):
         """
 
         with open(file_name, "r") as file:
-            board = json.load(file)
+            info = json.load(file)
             file.close()
+
+        board = Board(info.get('width', 8), info.get('height', 8))
+
+        for tile in info.get('tiles', []):
+            board.add_tile(tile)
         
         return board
 
@@ -122,15 +112,15 @@ class Board(Savable):
         """
         return width * Tile.WIDTH, height * Tile.HEIGHT
     
-    def __init__(self, surface: pygame.Surface, size: tuple[int] or list[int]):
+    def __init__(self, width: int, height: int):
         """
         Construit un objet Board avec les tuiles du plateau en paramètre.
         `size`: Définit la taille du plateau de jeu, en donnant le nombre de tuiles
         en hauteur et en largeur, et une tuile a une taille par défaut de 128 px par 128 px.
         `tiles`: Les tuiles déjà chargées sont fournies en argument.
         """
-        self.surface = surface
-        self.width, self.height = size
+        self.width, self.height = width, height
+        self.surface = pygame.Surface((self.width * Tile.WIDTH, self.height * Tile.HEIGHT))
 
         self.mapping = Board.generate(self.width, self.height)
         self.tiles = pygame.sprite.Group()
@@ -142,7 +132,8 @@ class Board(Savable):
         state = self.__dict__.copy()
         state.update(
             {
-                'size': (self.width, self.height),
+                'width': self.width,
+                'height': self.height,
                 'tiles': [getattr(tile, "file") for tile in self.tiles]
             }
         )
@@ -150,23 +141,24 @@ class Board(Savable):
     
     def __setstate__(self, state: dict):
         """"""
-        size = state["size"]
-        self.__init__(pygame.Surface(Board.get_surface_size(*size)), size)
+        self.__init__(state['width'], state['height'])
     
-    def add_tile(self, file: str):
+    def add_tile(self, name: str):
         """"""
-        tile = Tile(self, file, self.get_at(len(self.tiles)))
-        tile.image.blit(
-            pygame.font.SysFont("consolas", 16).render(f"{len(self.tiles)}", True, (255, 255, 255)),
-            (8, 8)
-        )
+        position = len(self.tiles)
+        tile = Tile(self, name, self.get_at(position))
+        if position > 0:
+            tile.image.blit(
+                pygame.font.SysFont("consolas", 12).render(f"{position}", True, '#000000', '#c3c3c3'),
+                (4, 4)
+            )
         self.tiles.add(tile)
     
     def display(self):
         """"""
         self.tiles.draw(self.surface)
     
-    def get_at(self, position: int = None) -> tuple[int, int] or None:
+    def get_at(self, position: int = None) -> (int, int) or None:
         """
         Retourne les coordonnées de l'emplacement de la prochaine tuile,
         sert à créer une spirale.
@@ -208,17 +200,17 @@ class Tile(pygame.sprite.Sprite):
     WIDTH = 64
     HEIGHT = 64
 
-    def __init__(self, board: Board, file: str, position: tuple[int] or list[int]):
+    def __init__(self, board: Board, name: str, position: (int, int)):
         """"""
         super().__init__()
         self.board = board
 
-        self.file = file
+        self.name = name
 
-        with open(self.file, "r") as file:
+        with open("data/tiles.json", "r") as file:
             data = json.load(file)
-            self.action = data['action']
-            self.image = pygame.image.load(data['image']).convert_alpha()
+            self.action = data.get(self.name)
+            self.image = pygame.image.load(f"assets/tiles/{self.name}.jpg").convert()
 
         self.rect = self.image.get_rect()
         self.rect.x = position[0] * Tile.WIDTH

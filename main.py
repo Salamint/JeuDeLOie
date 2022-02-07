@@ -4,10 +4,8 @@ Ceci est un projet de NSI pour classe de Seconde Générale.
 """
 
 # Import de 'common.py'
-import pygame
-
-import game
 from common import *
+import game
 
 
 # variables globales de signature (version, auteurs, license, droits...)
@@ -15,7 +13,7 @@ from common import *
 # Nom du jeu
 __title__ = "Jeu de l'oie"
 # Auteurs du jeu
-__authors__ = ["CelianJok", "soh-L", "Warna38", "Nagrom850"]
+__authors__ = ["CelianJok", "Nagrom850", "soh-L", "Warna38"]
 # License du jeu
 __license__ = "MIT License"
 # Version du jeu
@@ -130,97 +128,185 @@ class Application(Application):
             self.clock.tick(144)
 
 
-# todo: documentation
 class TitleScreen(Task):
     """
     Classe représentant l'écran de démarrage du jeu.
     """
 
     def __init__(self, app: Application):
-        """"""
-        # Appel du constructeur de la superclasse.
+        """
+        Construit une nouvelle instance de la classe TitleScreen.
+        L'écran titre est constitué d'un titre, de boutons permettant de créer une nouvelle partie,
+        et d'un menu de sélection de sauvegardes.
+        """
+
+        # Appel du constructeur de la superclasse
         super().__init__(app)
 
         # Images et surfaces de base.
         text = sans_font.render("Le Jeu De L'Oie", True, (255, 255, 255))
         goose = pygame.image.load("assets/goose.png").convert_alpha()
 
-        # Titre.
-        self.title = pygame.Surface((self.app.screen.get_width() - 64, 64))
+        # Crée l'image du titre et le centre sur l'écran
+        title_size = (576, 64)
+        self.title = pygame.Surface(title_size)
         self.title.blit(goose, (0, 0))
         self.title.blit(text, (64, -16))
-        self.title.blit(goose, (512, 0))
-        self.title_position = (32, 64)
-
-        # Menu principal.
-        self.menu = pygame.sprite.Group()
-        self.menu.add(
-            PushButton("Nouvelle Partie", (256, 64), (192, 384), self.play),
-            PushButton("Charger", (256, 64), (192, 480), self.save_select)
+        self.title.blit(goose, (title_size[0] - 64, 0))
+        self.title_position = (
+            center_width(title_size[0], self.app.screen.get_width()),
+            title_size[1]
         )
 
-        # Menu des sauvegardes.
+        # Menu principal et boutons
+        button_size = (256, 64)
+        screen_width_center = center_width(button_size[0], self.app.screen.get_width())
+
+        self.menu = pygame.sprite.Group()
+        self.menu.add(
+            PushButton("Nouvelle Partie", button_size, (screen_width_center, 384), self.play),
+            PushButton("Charger", button_size, (screen_width_center, 480), self.save_select)
+        )
+
+        # Menu des sauvegardes
         self.select = False
         self.saves = pygame.sprite.Group()
-        self.save_selector = pygame.Surface((256, 384))
-        self.save_selector_rect = pygame.Rect(192, 192, 256, 384)
-        self.back_button = PushButton("Retour", (128, 64), (32, 512), self.main)
+        save_selector_size = (256, 384)
+        self.save_selector_position = (center_width(save_selector_size[0], self.app.screen.get_width()), 192)
+        self.save_selector = pygame.Surface(save_selector_size)
+        self.save_selector_rect = pygame.Rect(*self.save_selector_position, *save_selector_size)
+
+        def back():
+            """
+            Fonction locale temporaire, permettant de passer de l'écran de sélection des sauvegardes à l'écran
+            d'accueil. N'est utilisée qu'une seule fois dans un seul attribut, d'où l'intérêt de faire de cette fonction
+            une fonction locale. Equivalent d'une fonction lambda.
+            """
+            self.select = False
+
+        self.back_button = PushButton("Retour", (128, 64), (128, 512), back)
+
+        # Calculs du rectangle des bordures
+        self.border_rect = self.save_selector_rect.copy()
+        self.border_rect.x -= 4
+        self.border_rect.y -= 4
+        self.border_rect.width += 8
+        self.border_rect.height += 8
 
     def display(self):
-        """"""
+        """
+        Affiche l'écran titre sur l'écran.
+
+        Affiche dans tous les cas le titre du jeu, puis, si l'utilisateur se trouve dans le menu des sauvegardes,
+        affiche toutes les sauvegardes disponibles, avec un bouton de retour.
+        Sinon, affiche un bouton pour lancer une nouvelle partie et un bouton pour charger une partie existante.
+        """
+
+        # Affiche le titre
         screen.blit(self.title, self.title_position)
+
+        # Si le menu de sélection des sauvegardes est ouvert
         if self.select:
-            rect = self.save_selector_rect.copy()
-            rect.x -= 4
-            rect.y -= 4
-            rect.width += 8
-            rect.height += 8
-            pygame.draw.rect(self.app.screen, '#FFFFFF', rect)
+
+            # Dessine un fond blanc pour les sauvegardes (bordure)
+            pygame.draw.rect(self.app.screen, '#FFFFFF', self.border_rect)
+            # Rempli le menu de sélection des sauvegardes de noir
             self.save_selector.fill('#000000')
+            # Dessine les boutons de sauvegardes
             self.saves.draw(self.save_selector)
+
+            # Affiche le menu sur l'écran
             self.app.screen.blit(self.save_selector, self.save_selector_rect)
+            # Affiche le bouton de retour
             self.app.screen.blit(self.back_button.image, self.back_button.rect)
+
+        # Si le menu de sélection des sauvegardes n'est pas ouvert (menu principal)
         else:
+            # Afficher le menu principal
             self.menu.draw(self.app.screen)
 
     def load(self, name: str):
+        """
+        Charge un fichier de sauvegarde et en fait la tâche de l'application en cours.
+        """
+
+        # Charge le fichier de sauvegarde sélectionné
         with open(name, "rb") as file:
+            # Charge le fichier et remplace l'application actuelle par l'objet chargé
             self.app.task = pickle.load(file, encoding="UTF-8")
 
-    def main(self):
-        self.select = False
-
     def play(self):
-        """"""
+        """
+        Crée une tâche jeu remplaçant la tâche de l'écran titre.
+        """
         self.app.task = game.Game(self.app)
 
     def save_select(self):
-        """"""
+        """
+        Ouvre le menu de sélection de sauvegardes et crée dans le groupe de boutons de sauvegardes,
+        un bouton par fichier contenu dans le répertoire des sauvegardes.
+        """
+
+        # Vide le groupe de boutons de sauvegardes
         self.saves.empty()
 
-        height = 8
+        # Hauteur par défaut
+        height = 16
+
+        # Pour chaque fichier ou dossier contenu dans 'data/saves'
         for file in os.listdir(access_directory(SAVE_PATH)):
             path = f"{SAVE_PATH}/{file}"
+
+            # Si l'élément est un fichier
             if os.path.isfile(path):
+                # Création et ajout d'un bouton chargeant le fichier
                 self.saves.add(
-                    PushButton(file, (256, 64), (0, height), lambda: self.load(path)))
+                    PushButton(file, (256, 64), (0, height), lambda: self.load(path))
+                )
+
+            # Incrémente la hauteur
             height += 96
 
+        # Indique que le menu de sélection des sauvegardes est ouvert
         self.select = True
 
     def update(self, event: pygame.event.Event):
-        """"""
+        """
+        Met à jour l'écran titre.
+        Lorsque l'écran titre est sur le menu principal, seul les boutons principaux sont mis à jour.
+        Lorsque l'écran titre est sur le menu de sélection des sauvegardes, chaque bouton de sauvegarde est
+        mis à jour, et il est possible de scroller dans ce menu pour faire défiler les sauvegardes.
+        """
+
+        # Si le menu de sélection des sauvegardes est ouvert
         if self.select:
+
+            # Si la molette de la souris est actionnée
             if event.type == pygame.MOUSEWHEEL:
+
+                # Lorsque la molette est actionnée vers le bas
                 if event.y < 0:
+                    # Pour chaque bouton de sauvegarde
                     for sprite in self.saves:
+                        # Défiler vers le bas
                         sprite.rect.y -= 96
+
+                # Lorsque la molette est actionnée vers le haut
                 if event.y > 0:
+                    # Pour chaque bouton de sauvegarde
                     for sprite in self.saves:
+                        # Défiler vers le haut
                         sprite.rect.y += 96
-            self.saves.update(event, (192, 192))
+
+            # Met à jour les boutons des sauvegardes
+            self.saves.update(event, self.save_selector_position)
+            # Met à jour le bouton de retour
             self.back_button.update(event)
+
+        # Si le menu de sélection des sauvegardes n'est pas ouvert (menu principal)
         else:
+
+            # Met à jour les boutons principaux
             self.menu.update(event)
 
 
