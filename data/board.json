@@ -2,13 +2,13 @@
   "width": 8,
   "height": 8,
   "tiles": [
-    "default", "default", "default", "default", "goose", "bridge", "default", "default",
-    "goose", "default", "default", "bridge", "default", "goose", "default", "default",
-    "default", "goose", "hotel", "default", "default", "default", "goose", "default",
-    "default", "dices", "goose", "default", "default", "default", "well", "goose",
-    "default", "default", "default", "goose", "default", "default", "default", "default",
-    "goose", "maze", "default", "default", "default", "goose", "default", "default",
-    "default", "goose", "default", "jail", "dices", "goose", "default", "default",
-    "default", "skull", "goose", "default", "default", "default", "end", "void"
+    "start", "default", "default", "default", "default", "goose", "bridge", "default",
+    "default", "goose", "default", "default", "bridge", "default", "goose", "default",
+    "default",  "default", "goose", "hotel", "default", "default", "default", "goose",
+    "default", "default", "dices", "goose", "default", "default", "default", "well",
+    "goose", "default", "default", "default", "goose", "default", "default", "default",
+    "default", "goose", "maze", "default", "default", "default", "goose", "default",
+    "default", "default", "goose", "default", "jail", "dices", "goose", "default",
+    "default", "default", "skull", "goose", "default", "default", "default", "end"
   ]
 }

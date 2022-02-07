@@ -145,11 +145,13 @@ class Board(Savable):
     
     def add_tile(self, name: str):
         """"""
-        tile = Tile(self, name, self.get_at(len(self.tiles)))
-        tile.image.blit(
-            pygame.font.SysFont("consolas", 12).render(f"{len(self.tiles) + 1}", True, '#000000', '#c3c3c3'),
-            (4, 4)
-        )
+        position = len(self.tiles)
+        tile = Tile(self, name, self.get_at(position))
+        if position > 0:
+            tile.image.blit(
+                pygame.font.SysFont("consolas", 12).render(f"{position}", True, '#000000', '#c3c3c3'),
+                (4, 4)
+            )
         self.tiles.add(tile)
     
     def display(self):

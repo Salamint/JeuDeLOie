@@ -20,7 +20,7 @@ class Dice(pygame.sprite.Sprite):
     sont lancés de façon aléatoire et ont six faces.
     """
 
-    def __init__(self, position: (int, int)):
+    def __init__(self, game, position: (int, int)):
         """
         Construit une nouvelle instance de dé
         """
@@ -28,8 +28,8 @@ class Dice(pygame.sprite.Sprite):
         # Appel le constructeur de la superclasse
         super().__init__()
 
-        # Nombre de mouvements à réaliser
-        self.nbr_move = 0
+        # La partie en cours
+        self.game = game
 
         # Liste contenant tous les sprites de dés allant de 1 à 6
         self.dices = [
@@ -50,9 +50,6 @@ class Dice(pygame.sprite.Sprite):
         de cases que l'oie doit parcourir
         """
 
-        # Nombre de mouvements réalisés
-        self.nbr_move = 0
-
         # Si une touche est pressée, et qu'il s'agit de la barre espace
         if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
 
@@ -60,8 +57,8 @@ class Dice(pygame.sprite.Sprite):
             result = roll_dice()
             # Change l'image du dé au nombre correspondant
             self.image = self.dices[result - 1]
-            # Stocke le nombre de mouvements à réaliser
-            self.nbr_move += result
+            # Fait avancer le joueur du nombre de cases indiquées
+            self.game.get_player().forward(result)
 
 
 class Game(Task, Savable):
@@ -97,10 +94,12 @@ class Game(Task, Savable):
         self.__pause = False
         # Menu de pause
         self.pause_menu = pygame.sprite.Group()
+        buttons_size = (256, 64)
+        buttons_x = center_width(buttons_size[0], self.app.screen.get_width())
         self.pause_menu.add(
-            Button("Reprendre", (256, 64), (192, 192), self.resume),
-            Button("Sauvegarder", (256, 64), (192, 256), self.save),
-            Button("Quitter", (256, 64), (192, 320), self.quit)
+            Button("Reprendre", buttons_size, (buttons_x, 192), self.resume),
+            Button("Sauvegarder", buttons_size, (buttons_x, 256), self.save),
+            Button("Quitter", buttons_size, (buttons_x, 320), self.quit)
         )
 
         # Liste des joueurs
@@ -117,14 +116,12 @@ class Game(Task, Savable):
 
         self.add_player()
 
-        # Crée un groupe de dés
-        self.dices = pygame.sprite.Group()
         # Définit leur emplacement en x qui est identique
         dices_x = center_width(64, 274) + 576
         # Ajoute les dés
-        self.dices.add(
-            Dice((dices_x, 128)),
-            Dice((dices_x, 448))
+        self.dices = (
+            Dice(self, (dices_x, 128)),
+            Dice(self, (dices_x, 448))
         )
 
     # todo: améliorer les sauvegardes et documenter les méthodes spécifiées
@@ -180,12 +177,19 @@ class Game(Task, Savable):
         # Affiche sur l'écran la surface du plateau
         self.app.screen.blit(self.board.surface, (64, 64))
         # Affiche les dés
-        self.dices.draw(self.app.screen)
+        for dice in self.dices:
+            self.app.screen.blit(dice.image, dice.rect)
 
         # Si le jeu est en pause
         if self.__pause:
             # Afficher le menu de pause
             self.pause_menu.draw(self.app.screen)
+
+    def get_player(self) -> player.Player:
+        """
+        Retourne le joueur en train de jouer (à qui c'est le tour).
+        """
+        return self.players[self.turn]
 
     def next_turn(self):
         """
@@ -205,7 +209,6 @@ class Game(Task, Savable):
     # todo: revoir cette méthode
     def play(self):
         self.is_playing = True
-        self.players[self.turn].play()
 
     def pause(self):
         """
@@ -271,16 +274,13 @@ class Game(Task, Savable):
                 # Mettre le jeu en pause
                 self.pause()
 
-            # Le nombre de cases que l'oie en cours de jeu doit parcourir
-            nbr_move = 0
+            # Met à jour les dés
             for dice in self.dices:
-                nbr_move += getattr(dice, 'nbr_move', 0)
+                dice.update(event)
 
             # Met à jour le plateau de jeu
             self.board.update(event)
-            # Met à jour les oies
-            self.geese.update(event, nbr_move)
-            # Met à jour les dés
-            self.dices.update(event)
+            # Met à jour les joueurs
+            self.geese.update(event)
             # Met à jour le tour de jeu
             self.play()

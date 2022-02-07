@@ -12,6 +12,7 @@ import board
 
 # Définition des classes
 
+# todo: documentation
 class Goose(pygame.sprite.Sprite, Savable):
     """
     Classe représentant l'oie que contrôle le joueur.
@@ -29,10 +30,11 @@ class Goose(pygame.sprite.Sprite, Savable):
         self.change_color(self.color, (255, 255, 255))
 
         self.rect = self.image.get_rect()
-        self.rect.x = 0
+        self.rect.x = board.Tile.WIDTH
         self.rect.y = 0
 
-        self.position = 0
+        self.finished = False
+        self.position = 1
         self.last_position = 0
 
     def __getstate__(self) -> dict:
@@ -58,62 +60,40 @@ class Goose(pygame.sprite.Sprite, Savable):
                 if self.image.get_at((x, y)) == old:
                     self.image.set_at((x, y), new)
     
-    def goto(self, tile: int):
+    def goto(self, position: int) -> bool:
         """
         Déplace l'oie sur une case en particulier.
         """
-        if 0 <= tile < self.player.game.board.size - 1:
+        if 0 < position < self.player.game.board.size:
             self.last_position = self.position
-            self.position = tile
+            self.position = position
+            return True
+        return False
     
-    def move_back(self, tiles: int):
+    def move_back(self, tiles: int) -> bool:
         """
         Fait reculer l'oie d'un certain nombre de case.
         """
-        self.goto(self.position - tiles)
+        return self.goto(self.position - tiles)
     
-    def move_forward(self, tiles: int):
+    def move_forward(self, tiles: int) -> bool:
         """
         Fait avancer l'oie d'un certain nombre de cases.
         """
-        self.goto(self.position + tiles)
+        return self.goto(self.position + tiles)
     
-    def update(self, event: pygame.event.Event, nbr_move):
+    def update(self, event: pygame.event.Event):
         """
         Met à jour l'oie (placement).
         """
+
+        # todo : supprimer et remplacer par les jetés de dés
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_LEFT:
                 self.move_back(1)
             elif event.key == pygame.K_RIGHT:
                 self.move_forward(1)
 
-        # Pour que l'oie avance case par case (NON TERMINÉ, L'OIE POPE DIRECTEMENT SUR LA CASE)
-        while nbr_move > 0:
-
-            # Si l'oie n'arrive pas pile sur la case 63, il doit reculer du nombre de cases qu'il a dépassé
-            if self.position == 62 and nbr_move + self.position > 62:
-                self.move_back(nbr_move)
-                nbr_move -= nbr_move
-            else:  # Sinon il avance normalement
-                nbr_move -= 1
-                self.move_forward(1)
-
-            print("Nombre de cases à avancer :", nbr_move)
-            print("Position :", self.position)
-
-        self.update_rect()
-
-    def update_rect(self):
-        """
-        Met à jour uniquement le rectangle de l'oie (placement), ces modifications sont assez nombreuses
-        et spécifiques, elles ont donc été placés dans une méthode à part de la méthode update.
-        """
-        coordinates = self.player.game.board.get_at(self.position)
-        width = board.Tile.WIDTH
-        height = board.Tile.HEIGHT
-        self.rect.x = width * coordinates[0]
-        self.rect.y = height * coordinates[1]
-
-        index = len(self.player.game.geese) - self.player.id
-        self.rect.y -= 1 * index
+        x, y = self.player.game.board.get_at(self.position)
+        self.rect.x = board.Tile.WIDTH * x
+        self.rect.y = board.Tile.HEIGHT * y
