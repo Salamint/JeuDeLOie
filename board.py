@@ -72,7 +72,6 @@ def spiral(width: int, height: int, position: int, padding: int = 0) -> (int, in
 
 # Définition des classes
 
-# todo: documentation
 class Board(Savable):
     """
     Une classe qui représente le plateau du jeu.
@@ -81,7 +80,7 @@ class Board(Savable):
     @staticmethod
     def from_file(file_name: str):
         """
-        Crée un objet Board depuis un fichier JSON.
+        Charge un plateau de jeu depuis un fichier JSON.
         """
 
         # Ouvre un fichier
@@ -100,32 +99,26 @@ class Board(Savable):
         for position, tile in enumerate(data.get("tiles", [])):
             tiles[position] = Tile(tile, spiral(width, height, position), index=position if position != 0 else None)
 
-        # Crée un nouveau plateau de dimensions indiquées dans le fichier
-        board = Board(width, height, tiles)
-        
-        return board
-
-    @staticmethod
-    def get_surface_size(width: int, height: int) -> (int, int):
-        """
-        Une méthode statique qui retourne la largeur et la hauteur d'un plateau en pixels, et de taille donnée,
-        en utilisant les constantes de la classe Tile.
-        """
-        return width * Tile.WIDTH, height * Tile.HEIGHT
+        # Crée et retourne un nouveau plateau de dimensions indiquées dans le fichier
+        return Board(width, height, tiles)
     
     def __init__(self, width: int, height: int, tiles: {int: 'Tile'}):
         """
-        Construit un objet Board avec les tuiles du plateau en paramètre.
-        `size`: Définit la taille du plateau de jeu, en donnant le nombre de tuiles
+        Construit un objet Board avec les cases du plateau en paramètre.
+        'size' : Définit la taille du plateau de jeu, en donnant le nombre de tuiles
         en hauteur et en largeur, et une tuile a une taille par défaut de 128 px par 128 px.
-        `tiles`: Les tuiles déjà chargées sont fournies en argument.
+        'tiles' : Les tuiles déjà chargées sont fournies en argument.
         """
+
+        # Dimensions du plateau
         self.width = width
         self.height = height
-        self.surface = pygame.Surface((self.width * Tile.WIDTH, self.height * Tile.HEIGHT))
 
+        # Surface et tuiles du plateau
+        self.surface = pygame.Surface((self.width * Tile.WIDTH, self.height * Tile.HEIGHT))
         self.tiles = tiles
 
+        # Affiche le plateau
         self.display()
     
     def __getstate__(self) -> dict:
@@ -144,55 +137,86 @@ class Board(Savable):
         """"""
 
     def display(self):
-        """"""
+        """
+        Affiche l'ensemble des cases du plateau sur la surface qui leur est destinée.
+        """
         for tile in self.tiles.values():
             self.surface.blit(tile.image, tile.rect)
 
     @property
     def size(self):
+        """
+        Retourne la superficie du plateau de jeu (en nombre de cases).
+        Peut servir à calculer le nombre de cases totales que le plateau compte.
+        """
         return self.width * self.height
     
     def update(self, event: pygame.event.Event):
+        """
+        Met à jour l'ensemble des cases du plateau de jeu, à l'aide d'un événement.
+        """
         for tile in self.tiles.values():
             tile.update(event)
 
 
-# todo: documentation
 class Tile(pygame.sprite.Sprite):
     """
-    Une classe qui représente une tuile du plateau.
+    Une classe qui représente une case du plateau.
 
     Une tuile est représentée par sa taille et position (rectangle),
     ainsi qu'une image et une action exécutée lorsqu'un joueur atterri dessus.
     """
 
-    # Constantes représentant la largeur et la hauteur d'une tuile (ne pas modifier).
+    # Constantes représentant les dimensions d'une case (à ne pas modifier).
     WIDTH = 64
     HEIGHT = 64
 
     def __init__(self, name: str, position: (int, int), index: int = None):
-        """"""
+        """
+        Construit un object Tile.
+        Une case requiert un nom, une position (coordonnées) et optionnellement
+        un indice à afficher en haut à gauche de la case.
+        """
+
+        # Appel le constructeur de la superclasse
         super().__init__()
 
+        # Le nom de la case
         self.name = name
+        # Ses coordonnées
         self.x, self.y = position
 
+        # Ouvre le fichier des tuiles en mode lecture
         with open("data/tiles.json", "r") as file:
+
+            # Charge dans un dictionnaire les informations du fichier
             data = json.load(file)
+
+            # Récupère l'action associée à la case (None lorsque introuvable)
             self.action = data.get(self.name)
+            # Charge l'image correspondant à la case
             self.image = pygame.image.load(f"assets/tiles/{self.name}.jpg").convert()
 
+        # Si un indice est passé en paramètres, c'est qu'il est à afficher
         if index is not None:
+            # L'afficher sur l'image de la case
             self.image.blit(
                 tile_font.render(str(index), True, '#000000', '#c3c3c3'),
                 (4, 4)
             )
 
+        # Le rectangle de la case
         self.rect = self.image.get_rect()
         self.rect.x = self.x * Tile.WIDTH
         self.rect.y = self.y * Tile.HEIGHT
 
-    def __call__(self, tiles: int, p: player.Player):
-        """"""
+    def activate(self, tiles: int, p: player.Player):
+        """
+        Méthode appelée lorsqu'un joueur arrive sur cette case.
+        Ajoute une action à la liste des effets du joueur.
+        """
+
+        # Si l'action de la case n'est pas nulle (inexistante)
         if self.action is not None:
+            # Ajouter une nouvelle action à la liste d'effets du joueur
             p.effects.append(self.action(tiles, p))
