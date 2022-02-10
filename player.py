@@ -4,8 +4,11 @@
 # Import de 'common.py'
 from common import *
 
+# Imports d'autres fichiers
 import goose
 
+
+# Définition des classes
 
 class Player(Savable):
     """
@@ -15,6 +18,7 @@ class Player(Savable):
 
     def __init__(self, game, identifier: int, color: list[int] or tuple[int]):
         self.game = game
+        self.effects: list = []
         self.id = identifier
         self.finished = False
         self.goose = goose.Goose(self, color)

@@ -94,6 +94,6 @@ class Goose(pygame.sprite.Sprite, Savable):
             elif event.key == pygame.K_RIGHT:
                 self.move_forward(1)
 
-        x, y = self.player.game.board.get_at(self.position)
-        self.rect.x = board.Tile.WIDTH * x
-        self.rect.y = board.Tile.HEIGHT * y
+        tile = self.player.game.board.tiles.get(self.position)
+        self.rect.x = board.Tile.WIDTH * tile.x
+        self.rect.y = board.Tile.HEIGHT * tile.y

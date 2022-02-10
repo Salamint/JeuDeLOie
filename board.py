@@ -4,6 +4,7 @@ en rapport avec le plateau de jeu.
 """
 
 # Import de 'common.py'
+import player
 from common import *
 
 
@@ -83,26 +84,26 @@ class Board(Savable):
         Crée un objet Board depuis un fichier JSON.
         """
 
+        # Ouvre un fichier
         with open(file_name, "r") as file:
-            info = json.load(file)
+            # Charge les informations du fichier
+            data = json.load(file)
+            # Ferme le fichier
             file.close()
 
-        board = Board(info.get('width', 8), info.get('height', 8))
+        # Stocke la largeur et hauteur du plateau
+        width, height = data.get('width', 8), data.get('height', 8)
 
-        for tile in info.get('tiles', []):
-            board.add_tile(tile)
+        # Crée une cartographie du plateau (emplacement des cases selon leur position)
+        tiles: {int: 'Tile'} = {}
+
+        for position, tile in enumerate(data.get("tiles", [])):
+            tiles[position] = Tile(tile, spiral(width, height, position), index=position if position != 0 else None)
+
+        # Crée un nouveau plateau de dimensions indiquées dans le fichier
+        board = Board(width, height, tiles)
         
         return board
-
-    @staticmethod
-    def generate(width: int, height: int) -> {int: (int, int)}:
-        """"""
-        mapping = {}
-
-        for position in range(width * height):
-            mapping.setdefault(position, spiral(width, height, position))
-
-        return mapping
 
     @staticmethod
     def get_surface_size(width: int, height: int) -> (int, int):
@@ -112,18 +113,18 @@ class Board(Savable):
         """
         return width * Tile.WIDTH, height * Tile.HEIGHT
     
-    def __init__(self, width: int, height: int):
+    def __init__(self, width: int, height: int, tiles: {int: 'Tile'}):
         """
         Construit un objet Board avec les tuiles du plateau en paramètre.
         `size`: Définit la taille du plateau de jeu, en donnant le nombre de tuiles
         en hauteur et en largeur, et une tuile a une taille par défaut de 128 px par 128 px.
         `tiles`: Les tuiles déjà chargées sont fournies en argument.
         """
-        self.width, self.height = width, height
+        self.width = width
+        self.height = height
         self.surface = pygame.Surface((self.width * Tile.WIDTH, self.height * Tile.HEIGHT))
 
-        self.mapping = Board.generate(self.width, self.height)
-        self.tiles = pygame.sprite.Group()
+        self.tiles = tiles
 
         self.display()
     
@@ -141,50 +142,19 @@ class Board(Savable):
     
     def __setstate__(self, state: dict):
         """"""
-        self.__init__(state['width'], state['height'])
-    
-    def add_tile(self, name: str):
-        """"""
-        position = len(self.tiles)
-        tile = Tile(self, name, self.get_at(position))
-        if position > 0:
-            tile.image.blit(
-                pygame.font.SysFont("consolas", 12).render(f"{position}", True, '#000000', '#c3c3c3'),
-                (4, 4)
-            )
-        self.tiles.add(tile)
-    
+
     def display(self):
         """"""
-        self.tiles.draw(self.surface)
-    
-    def get_at(self, position: int = None) -> (int, int) or None:
-        """
-        Retourne les coordonnées de l'emplacement de la prochaine tuile,
-        sert à créer une spirale.
-        """
-        return self.mapping.get(position)
+        for tile in self.tiles.values():
+            self.surface.blit(tile.image, tile.rect)
 
     @property
     def size(self):
         return self.width * self.height
     
     def update(self, event: pygame.event.Event):
-        self.tiles.update(event)
-
-
-class GooseAction:
-    """
-    Un décorateur pour une action d'oie.
-    """
-
-    def __init__(self, function: callable):
-        """"""
-        self.function = function
-    
-    def __call__(self, goose) -> None:
-        """"""
-        self.function(goose)
+        for tile in self.tiles.values():
+            tile.update(event)
 
 
 # todo: documentation
@@ -200,18 +170,29 @@ class Tile(pygame.sprite.Sprite):
     WIDTH = 64
     HEIGHT = 64
 
-    def __init__(self, board: Board, name: str, position: (int, int)):
+    def __init__(self, name: str, position: (int, int), index: int = None):
         """"""
         super().__init__()
-        self.board = board
 
         self.name = name
+        self.x, self.y = position
 
         with open("data/tiles.json", "r") as file:
             data = json.load(file)
             self.action = data.get(self.name)
             self.image = pygame.image.load(f"assets/tiles/{self.name}.jpg").convert()
 
+        if index is not None:
+            self.image.blit(
+                tile_font.render(str(index), True, '#000000', '#c3c3c3'),
+                (4, 4)
+            )
+
         self.rect = self.image.get_rect()
-        self.rect.x = position[0] * Tile.WIDTH
-        self.rect.y = position[1] * Tile.HEIGHT
+        self.rect.x = self.x * Tile.WIDTH
+        self.rect.y = self.y * Tile.HEIGHT
+
+    def __call__(self, tiles: int, p: player.Player):
+        """"""
+        if self.action is not None:
+            p.effects.append(self.action(tiles, p))
