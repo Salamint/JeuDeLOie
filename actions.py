@@ -31,6 +31,11 @@ class Action(abc.ABC):
         """
         pass
 
+    def discard(self):
+        """
+        Cette méthode supprime l'action de la liste des effets du joueur.
+        """
+
 
 class Bridge(Action):
     """

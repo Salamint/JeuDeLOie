@@ -4,8 +4,10 @@ en rapport avec le plateau de jeu.
 """
 
 # Import de 'common.py'
-import player
 from common import *
+
+# Import d'autres fichiers
+import player
 
 
 # Définition des fonctions

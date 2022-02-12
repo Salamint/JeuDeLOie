@@ -10,6 +10,16 @@ import goose
 
 # Définition des classes
 
+class ActionEffects:
+    """
+    Représente un moyen de stocker les effets des actions sur la durée.
+    """
+
+    def __init__(self):
+        """"""
+        self.index = 0
+
+
 class Player(Savable):
     """
     Une classe représentant un joueur. Un joueur est en général plus qu'une simple oie,
@@ -18,8 +28,8 @@ class Player(Savable):
 
     def __init__(self, game, identifier: int, color: list[int] or tuple[int]):
         self.game = game
-        self.effects: list = []
         self.id = identifier
+        self.effects: list = []
         self.finished = False
         self.goose = goose.Goose(self, color)
 
