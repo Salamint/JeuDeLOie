@@ -1,13 +1,13 @@
 {
-  "bridge": null,
+  "bridge": "bridge",
   "default": null,
-  "dices": null,
-  "end": null,
-  "goose": null,
-  "hotel": null,
-  "jail": null,
-  "maze": null,
-  "skull": null,
+  "dices": "dices",
+  "end": "end",
+  "goose": "goose",
+  "hotel": "hotel",
+  "jail": "jail",
+  "maze": "maze",
+  "skull": "skull",
   "start": null,
-  "well": null
+  "well": "well"
 }

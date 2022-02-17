@@ -7,6 +7,7 @@ en rapport avec le plateau de jeu.
 from common import *
 
 # Import d'autres fichiers
+import actions
 import player
 
 
@@ -96,20 +97,18 @@ class Board(Savable):
         width, height = data.get('width', 8), data.get('height', 8)
 
         # Crée une cartographie du plateau (emplacement des cases selon leur position)
-        tiles: {int: 'Tile'} = {}
+        tiles: dict[int, 'Tile'] = {}
 
         for position, tile in enumerate(data.get("tiles", [])):
-            tiles[position] = Tile(tile, spiral(width, height, position), index=position if position != 0 else None)
+            tiles[position] = Tile(tile, position, spiral(width, height, position))
 
         # Crée et retourne un nouveau plateau de dimensions indiquées dans le fichier
         return Board(width, height, tiles)
     
-    def __init__(self, width: int, height: int, tiles: {int: 'Tile'}):
+    def __init__(self, width: int, height: int, tiles: dict[int, 'Tile']):
         """
-        Construit un objet Board avec les cases du plateau en paramètre.
-        'size' : Définit la taille du plateau de jeu, en donnant le nombre de tuiles
-        en hauteur et en largeur, et une tuile a une taille par défaut de 128 px par 128 px.
-        'tiles' : Les tuiles déjà chargées sont fournies en argument.
+        Construit une nouvelle instance de la classe Board avec les cases
+        et les dimensions du plateau en paramètre.
         """
 
         # Dimensions du plateau
@@ -173,9 +172,9 @@ class Tile(pygame.sprite.Sprite):
     WIDTH = 64
     HEIGHT = 64
 
-    def __init__(self, name: str, position: (int, int), index: int = None):
+    def __init__(self, name: str, index: int, position: (int, int)):
         """
-        Construit un object Tile.
+        Construit une instance de la classe Tile.
         Une case requiert un nom, une position (coordonnées) et optionnellement
         un indice à afficher en haut à gauche de la case.
         """
@@ -185,6 +184,8 @@ class Tile(pygame.sprite.Sprite):
 
         # Le nom de la case
         self.name = name
+        # L'indice de la case
+        self.index = index
         # Ses coordonnées
         self.x, self.y = position
 
@@ -195,12 +196,12 @@ class Tile(pygame.sprite.Sprite):
             data = json.load(file)
 
             # Récupère l'action associée à la case (None lorsque introuvable)
-            self.action = data.get(self.name)
+            self.action = actions.DEFAULTS.get(data.get(self.name))
             # Charge l'image correspondant à la case
             self.image = pygame.image.load(f"assets/tiles/{self.name}.jpg").convert()
 
         # Si un indice est passé en paramètres, c'est qu'il est à afficher
-        if index is not None:
+        if index != 0:
             # L'afficher sur l'image de la case
             self.image.blit(
                 tile_font.render(str(index), True, '#000000', '#c3c3c3'),
@@ -212,7 +213,7 @@ class Tile(pygame.sprite.Sprite):
         self.rect.x = self.x * Tile.WIDTH
         self.rect.y = self.y * Tile.HEIGHT
 
-    def activate(self, tiles: int, p: player.Player):
+    def activate(self, distance: int, p: player.Player):
         """
         Méthode appelée lorsqu'un joueur arrive sur cette case.
         Ajoute une action à la liste des effets du joueur.
@@ -221,4 +222,6 @@ class Tile(pygame.sprite.Sprite):
         # Si l'action de la case n'est pas nulle (inexistante)
         if self.action is not None:
             # Ajouter une nouvelle action à la liste d'effets du joueur
-            p.effects.append(self.action(tiles, p))
+            action = self.action(distance, self, p)
+            p.effects[self.name] = action
+            action.activate()

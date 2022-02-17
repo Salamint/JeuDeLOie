@@ -8,6 +8,7 @@ from common import *
 
 # Import d'autres fichiers
 import board
+import player
 
 
 # Définition des classes
@@ -18,24 +19,39 @@ class Goose(pygame.sprite.Sprite, Savable):
     Classe représentant l'oie que contrôle le joueur.
     """
 
-    def __init__(self, player, color: list or tuple):
+    def __init__(self, player: 'player.Player', color: list or tuple):
         """
+        Construit une nouvelle instance de la classe Goose représentant une oie.
+        Une oie est associée à un joueur, possède une couleur, une position et d'autres attributs.
+        Elle est aussi un sprite (possède donc un rectangle et une image) ainsi que des booléens
+        rensignant sur ses animations.
         """
+        # Appelle le constructeur de la superclasse
         super().__init__()
 
+        # Le joueur associé à l'oie
         self.player = player
+
+        # Définit la couleur de l'oie
         self.color = color
 
+        # Image de l'oie
         self.image = pygame.image.load("assets/goose.png").convert_alpha()
         self.change_color(self.color, (255, 255, 255))
 
+        # Rectangle de l'oie
         self.rect = self.image.get_rect()
         self.rect.x = board.Tile.WIDTH
         self.rect.y = 0
 
-        self.finished = False
+        # Attributs relatifs à la position de l'oie
         self.position = 1
         self.last_position = 0
+        self.finished = False
+
+        # Attributs relatifs aux animations et à l'état de l'oie
+        self.animating = False
+        self.moving = False
 
     def __getstate__(self) -> dict:
         state = self.__dict__.copy()
@@ -52,35 +68,44 @@ class Goose(pygame.sprite.Sprite, Savable):
         self.__init__(None, state['color'])
         self.position = state['position']
         self.last_position = state['last_position']
+    
+    def able_to_move(self, position: int) -> bool:
+        """
+        Retourne un booléen précisant si l'oie est en capacité de se déplacer,
+        ou plus génériquement, si elle est en capacité de réaliser une action
+        qui demande de stopper l'animation en cours.
+        """
+        return not self.animating and not self.moving and 0 < position < self.player.game.board.size
 
     def change_color(self, new: str or tuple, old: str or tuple):
-        """"""
+        """
+        Remplace une couleur donnée de l'oie par une autre couleur donnée.
+        Remplacer une couleur introuvable sur le bestiau ne causera aucune erreur.
+        Les couleurs doivent être de type RGB ou RGBA, avec des valeurs comprisent entre 0 et 255.
+        Au-delà, une erreur est levée par pygame.
+        """
         for x in range(self.image.get_width()):
             for y in range(self.image.get_height()):
                 if self.image.get_at((x, y)) == old:
                     self.image.set_at((x, y), new)
     
-    def goto(self, position: int) -> bool:
+    def go_to(self, position: int):
         """
-        Déplace l'oie sur une case en particulier.
+        Déplace l'oie à une position donnée, si elle est atteignable.
         """
-        if 0 < position < self.player.game.board.size:
+        if self.able_to_move(position):
             self.last_position = self.position
             self.position = position
+            tile = self.player.game.board.tiles.get(self.position)
+            tile.activate(self.position - self.last_position, self.player)
             return True
         return False
     
-    def move_back(self, tiles: int) -> bool:
-        """
-        Fait reculer l'oie d'un certain nombre de case.
-        """
-        return self.goto(self.position - tiles)
-    
-    def move_forward(self, tiles: int) -> bool:
+    def move_of(self, tiles: int) -> bool:
         """
         Fait avancer l'oie d'un certain nombre de cases.
         """
-        return self.goto(self.position + tiles)
+        return self.go_to(self.position + tiles)
     
     def update(self, event: pygame.event.Event):
         """
@@ -88,11 +113,11 @@ class Goose(pygame.sprite.Sprite, Savable):
         """
 
         # todo : supprimer et remplacer par les jetés de dés
-        if event.type == pygame.KEYDOWN:
+        if event.type == pygame.KEYDOWN and self.player.stopped is False:
             if event.key == pygame.K_LEFT:
-                self.move_back(1)
+                self.move_of(-1)
             elif event.key == pygame.K_RIGHT:
-                self.move_forward(1)
+                self.move_of(1)
 
         tile = self.player.game.board.tiles.get(self.position)
         self.rect.x = board.Tile.WIDTH * tile.x

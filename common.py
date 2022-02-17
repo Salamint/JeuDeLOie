@@ -116,13 +116,6 @@ def center_width(width: int, container: int):
     return container // 2 - width // 2
 
 
-def roll_dice() -> int:
-    """
-    Simule un lancé de dé en retournant un nombre aléatoire entre 1 et 6.
-    """
-    return random.randint(1, 6)
-
-
 # Définition des classes et interfaces
 
 class Application(abc.ABC):

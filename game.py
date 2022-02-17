@@ -20,7 +20,14 @@ class Dice(pygame.sprite.Sprite):
     sont lancés de façon aléatoire et ont six faces.
     """
 
-    def __init__(self, game, position: (int, int)):
+    @staticmethod
+    def random() -> int:
+        """
+        Simule un lancé de dé en retournant un nombre aléatoire entre 1 et 6.
+        """
+        return random.randint(1, 6)
+
+    def __init__(self, game: 'Game', position: (int, int)):
         """
         Construit une nouvelle instance de dé
         """
@@ -31,6 +38,11 @@ class Dice(pygame.sprite.Sprite):
         # La partie en cours
         self.game = game
 
+        # Valeur du dé
+        self.value = 1
+        # Si le dé à changé entre temps
+        self.rolled = False
+
         # Liste contenant tous les sprites de dés allant de 1 à 6
         self.dices = [
             pygame.image.load(f"assets/dice/{number + 1}.png").convert_alpha()
@@ -38,10 +50,32 @@ class Dice(pygame.sprite.Sprite):
         ]
 
         # Image par défaut à 0 (1 point)
-        self.image = self.dices[0]
+        self.image = self.dices[self.value - 1]
         # Rectangle (position et taille)
         self.rect = self.image.get_rect()
         self.rect.x, self.rect.y = position
+    
+    def get_value(self):
+        """
+        Retourne la valeur du dé et réinitialise l'état du dé.
+        """
+
+        # Réinitialise l'état du dé
+        self.rolled = False
+        # Retourne la veleur du dé
+        return self.value
+    
+    def roll(self):
+        """
+        Lance le dé, change son apparence et sa valeur.
+        """
+
+        # Stocke le résultat du lancé de dé
+        self.value = Dice.random()
+        # Change l'image du dé au nombre correspondant
+        self.image = self.dices[self.value - 1]
+        # Indique que le dé à été lancé
+        self.rolled = True
 
     def update(self, event: pygame.event.Event):
         """
@@ -53,12 +87,8 @@ class Dice(pygame.sprite.Sprite):
         # Si une touche est pressée, et qu'il s'agit de la barre espace
         if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
 
-            # Stocke le résultat du lancé de dé
-            result = roll_dice()
-            # Change l'image du dé au nombre correspondant
-            self.image = self.dices[result - 1]
-            # Fait avancer le joueur du nombre de cases indiquées
-            self.game.get_player().forward(result)
+            # Lance le dé
+            self.roll()
 
 
 class Game(Task, Savable):
@@ -91,7 +121,7 @@ class Game(Task, Savable):
         self.geese = pygame.sprite.Group()
 
         # L'état du jeu (en pause ou pas), attribut privé, accessible depuis les méthodes pause et resume
-        self.__pause = False
+        self.paused = False
         # Menu de pause
         self.pause_menu = pygame.sprite.Group()
         buttons_size = (256, 64)
@@ -181,11 +211,11 @@ class Game(Task, Savable):
             self.app.screen.blit(dice.image, dice.rect)
 
         # Si le jeu est en pause
-        if self.__pause:
+        if self.paused:
             # Afficher le menu de pause
             self.pause_menu.draw(self.app.screen)
 
-    def get_player(self) -> player.Player:
+    def get_player(self) -> 'player.Player':
         """
         Retourne le joueur en train de jouer (à qui c'est le tour).
         """
@@ -206,16 +236,12 @@ class Game(Task, Savable):
             # Reprendre depuis le début
             self.turn = 0
 
-    # todo: revoir cette méthode
-    def play(self):
-        self.is_playing = True
-
     def pause(self):
         """
         Met le jeu en pause, empêche les éléments tels que le plateau ou les dés d'être mis à jour,
         mais continuera de les afficher.
         """
-        self.__pause = True
+        self.paused = True
 
     def quit(self):
         """
@@ -227,7 +253,7 @@ class Game(Task, Savable):
         """
         Rétablit le jeu là où il s'était arrêté et arrête la pause.
         """
-        self.__pause = False
+        self.paused = False
 
     def save(self):
         """
@@ -256,7 +282,7 @@ class Game(Task, Savable):
         """
 
         # Si le jeu est en pause
-        if self.__pause:
+        if self.paused:
 
             # Si la touche espace est pressée
             if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
@@ -280,7 +306,7 @@ class Game(Task, Savable):
 
             # Met à jour le plateau de jeu
             self.board.update(event)
-            # Met à jour les joueurs
+            # Met à jour les oies des joueurs
             self.geese.update(event)
-            # Met à jour le tour de jeu
-            self.play()
+            # Met à jour le joueur tour de jeu
+            self.get_player().update()
