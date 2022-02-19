@@ -121,21 +121,10 @@ class Board(Savable):
 
         # Affiche le plateau
         self.display()
-    
-    def __getstate__(self) -> dict:
-        """"""
-        state = self.__dict__.copy()
-        state.update(
-            {
-                'width': self.width,
-                'height': self.height,
-                'tiles': [getattr(tile, "file") for tile in self.tiles]
-            }
-        )
-        return state
-    
-    def __setstate__(self, state: dict):
-        """"""
+
+    def __getstate__(self) -> dict: ...
+
+    def __setstate__(self, state: dict): ...
 
     def display(self):
         """
@@ -160,7 +149,7 @@ class Board(Savable):
             tile.update(event)
 
 
-class Tile(pygame.sprite.Sprite):
+class Tile(pygame.sprite.Sprite, Savable):
     """
     Une classe qui représente une case du plateau.
 
@@ -212,6 +201,10 @@ class Tile(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.x = self.x * Tile.WIDTH
         self.rect.y = self.y * Tile.HEIGHT
+
+    def __getstate__(self) -> dict: ...
+
+    def __setstate__(self, state: dict): ...
 
     def activate(self, distance: int, p: player.Player):
         """

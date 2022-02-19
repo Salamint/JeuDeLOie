@@ -19,18 +19,18 @@ class Goose(pygame.sprite.Sprite, Savable):
     Classe représentant l'oie que contrôle le joueur.
     """
 
-    def __init__(self, player: 'player.Player', color: list or tuple):
+    def __init__(self, player_: 'player.Player', color: list or tuple):
         """
         Construit une nouvelle instance de la classe Goose représentant une oie.
         Une oie est associée à un joueur, possède une couleur, une position et d'autres attributs.
         Elle est aussi un sprite (possède donc un rectangle et une image) ainsi que des booléens
-        rensignant sur ses animations.
+        renseignant sur ses animations.
         """
         # Appelle le constructeur de la superclasse
         super().__init__()
 
         # Le joueur associé à l'oie
-        self.player = player
+        self.player = player_
 
         # Définit la couleur de l'oie
         self.color = color
@@ -53,21 +53,9 @@ class Goose(pygame.sprite.Sprite, Savable):
         self.animating = False
         self.moving = False
 
-    def __getstate__(self) -> dict:
-        state = self.__dict__.copy()
-        state.update(
-            {
-                'color': self.color,
-                'position': self.position,
-                'last_position': self.last_position
-            }
-        )
-        return state
+    def __getstate__(self) -> dict: ...
 
-    def __setstate__(self, state: dict):
-        self.__init__(None, state['color'])
-        self.position = state['position']
-        self.last_position = state['last_position']
+    def __setstate__(self, state: dict): ...
     
     def able_to_move(self, position: int) -> bool:
         """
@@ -81,7 +69,7 @@ class Goose(pygame.sprite.Sprite, Savable):
         """
         Remplace une couleur donnée de l'oie par une autre couleur donnée.
         Remplacer une couleur introuvable sur le bestiau ne causera aucune erreur.
-        Les couleurs doivent être de type RGB ou RGBA, avec des valeurs comprisent entre 0 et 255.
+        Les couleurs doivent être de type RGB ou RGBA, avec des valeurs comprises entre 0 et 255.
         Au-delà, une erreur est levée par pygame.
         """
         for x in range(self.image.get_width()):

@@ -40,7 +40,7 @@ class Dice(pygame.sprite.Sprite):
 
         # Valeur du dé
         self.value = 1
-        # Si le dé à changé entre temps
+        # Si le dé a changé entre temps
         self.rolled = False
 
         # Liste contenant tous les sprites de dés allant de 1 à 6
@@ -62,7 +62,7 @@ class Dice(pygame.sprite.Sprite):
 
         # Réinitialise l'état du dé
         self.rolled = False
-        # Retourne la veleur du dé
+        # Retourne la valeur du dé
         return self.value
     
     def roll(self):
@@ -74,7 +74,7 @@ class Dice(pygame.sprite.Sprite):
         self.value = Dice.random()
         # Change l'image du dé au nombre correspondant
         self.image = self.dices[self.value - 1]
-        # Indique que le dé à été lancé
+        # Indique que le dé a été lancé
         self.rolled = True
 
     def update(self, event: pygame.event.Event):
@@ -154,20 +154,9 @@ class Game(Task, Savable):
             Dice(self, (dices_x, 448))
         )
 
-    # todo: améliorer les sauvegardes et documenter les méthodes spécifiées
-    def __getnewargs__(self) -> tuple:
-        return self.app,
+    def __getstate__(self) -> dict: ...
 
-    def __getstate__(self) -> dict:
-        """"""
-        state = self.__dict__.copy()
-        state['timer'] -= time.perf_counter()
-        return state
-
-    def __setstate__(self, state: dict):
-        """"""
-        state['timer'] += time.perf_counter()
-        self.__dict__ = state.copy()
+    def __setstate__(self, state: dict): ...
 
     def add_player(self):
         """

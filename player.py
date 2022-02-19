@@ -18,12 +18,16 @@ class Player(Savable):
     et contiendra des informations plus diverses, comme des statistiques ou l'adresse IPv4.
     """
 
-    def __init__(self, game: 'game.Game', identifier: int, color: list[int] or tuple[int]):
-        self.game = game
+    def __init__(self, game_: 'game.Game', identifier: int, color: list[int] or tuple[int]):
+        self.game = game_
         self.id = identifier
         self.effects: dict[str, 'actions.Action'] = {}
         self.stopped = False
         self.goose = goose.Goose(self, color)
+
+    def __getstate__(self) -> dict: ...
+
+    def __setstate__(self, state: dict): ...
     
     def move_of(self, distance: int):
         """
@@ -36,7 +40,7 @@ class Player(Savable):
             # Avancer
             if not self.goose.move_of(distance):
                 
-                # Si il est impossible d'avancer, reculer
+                # S'il est impossible d'avancer, reculer
                 self.goose.move_of(-distance)
 
     def update(self):
@@ -50,25 +54,11 @@ class Player(Savable):
         # Parcours tous les dés du jeu
         for dice in self.game.dices:
 
-            # Si le dé à été lancé durant le tour
+            # Si le dé a été lancé durant le tour
             if dice.rolled:
 
-                # Ajoute la valeur du dé  la distance et réinitialise l'état du dé
+                # Ajoute la valeur du dé la distance et réinitialise l'état du dé
                 distance += dice.get_value()
         
         # Fait avancer le joueur
         self.move_of(distance)
-
-    def __setstate__(self, state: dict):
-        self.id = state['id']
-        self.goose = state['goose']
-
-    def __getstate__(self) -> dict:
-        state = self.__dict__.copy()
-        state.update(
-            {
-                'id': self.id,
-                'goose': self.goose
-            }
-        )
-        return state

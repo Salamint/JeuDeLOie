@@ -3,9 +3,6 @@ Un fichier qui contient toutes les fonctions que peuvent utiliser les oies lorsq
 sur des cases spéciales.
 """
 
-# Import de 'common.py'
-from common import *
-
 # Import d'autres fichiers
 import board
 import player
@@ -55,9 +52,9 @@ class Action:
     def default(self) -> None:
         """
         Cette méthode est appelée lorsque le joueur vient d'arriver sur la case,
-        et si la méthode 'activate'n'est pas réécrite.
-        Elle détruira l'action après l'appel de cette méthode, si vous voulez conserver l'action car
-        elle est effective sur plusieurs tours, réécrivez la méthode 'activate'.
+        et si la méthode 'activate' n'est pas réécrite.
+        Elle détruira l'action après l'appel de cette méthode, si vous voulez conserver l'action,
+        car elle est effective sur plusieurs tours, réécrivez la méthode 'activate'.
         """
         pass
 
