@@ -30,7 +30,7 @@ def main():
     Cette directive permet de se servir du bloc `if __name__ == '__main__'`
     pour ne pas lancer le jeu lorsque ce fichier est importé,
     mais permet d'utiliser la fonction `main` dans d'autres programmes,
-    sans pour autant utiliser 'sys.exit'.
+    sans pour autant utiliser la fonction 'exit' du module 'sys'.
     """
 
     # Crée une nouvelle instance de `Application`
@@ -78,7 +78,7 @@ class Application(Application):
         """
         Quitte le jeu.
 
-        Met la variable `self.running` sur False pour stopper la boucle du jeu. Cette méthode peut être
+        Met l'attribut `running` sur False pour stopper la boucle du jeu. Cette méthode peut être
         appelée à n'importe quel endroit du code.
         """
         self.running = False
@@ -89,7 +89,7 @@ class Application(Application):
         Le jeu tourne à 60 fps (frame per second), et chaque tour de boucle correspond à une frame.
         Donc pendant execution du jeu, il y aura 60 tours de boucle en moyenne chaque seconde.
         
-        La variable 'self.running' n'est pas une variable locale donc le programme peut être arrêté
+        L'attribut 'running' n'est pas une variable locale donc le programme peut être arrêté
         à n'importe quel moment, mais il est recommandé d'utiliser la méthode 'self.quit'.
 
         À chaque tour de boucle, tous les éléments graphiques (sprites, groupes de sprites)
