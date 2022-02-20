@@ -1,6 +1,6 @@
 """
 Jeu de l'oie en Python 3 avec la bibliothèque Pygame 2.1.2.
-Ceci est un projet de NSI pour classe de Seconde Générale.
+Ceci est un projet de NSI pour classe de Seconde Générale du lycée Ferdinand-Buisson (Voiron).
 """
 
 # Import de 'common.py'
@@ -254,8 +254,8 @@ class TitleScreen(Task):
         height = 16
 
         # Pour chaque fichier ou dossier contenu dans 'data/saves'
-        for file in os.listdir(access_directory(SAVE_PATH)):
-            path = f"{SAVE_PATH}/{file}"
+        for file in os.listdir(access_directory(SAVES_PATH)):
+            path = f"{SAVES_PATH}/{file}"
 
             # Si l'élément est un fichier
             if os.path.isfile(path):

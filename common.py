@@ -37,7 +37,7 @@ screen = pygame.display.set_mode(screen_size)
 
 # Constantes
 MAX_PLAYERS = 4
-SAVE_PATH = "data/saves"
+SAVES_PATH = "data/saves"
 
 # Couleurs
 geese_colors = [

@@ -253,9 +253,9 @@ class Game(Task, Savable):
         # Si le fichier n'existait pas
         if self.file is None:
             # Compte le nombre de fichiers dans le dossier des sauvegardes
-            save_number = len(os.listdir(access_directory(SAVE_PATH)))
+            save_number = len(os.listdir(access_directory(SAVES_PATH)))
             # Stocke le nom du fichier de sauvegarde
-            self.file = f"{SAVE_PATH}/save#{save_number}.pickle"
+            self.file = f"{SAVES_PATH}/save#{save_number}.pickle"
 
         # Sauvegarde le jeu
         with open(self.file, "wb") as file:
