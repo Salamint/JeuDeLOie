@@ -234,15 +234,25 @@ class Button(pygame.sprite.Sprite):
 
 
 class PushButton(Button):
-    """"""
+    """
+    Classe représentant un bouton poussoir, qui fait une animation lorsqu'il est pressé, et ne s'active
+    que lorsqu'il est relâché.
+    Il est possible en plus de choisir sa couleur, le rayon de l'arrondissement des angles ainsi que l'élévation.
+    """
 
-    # todo: documentation
     def __init__(
             self, label: str, size: (int, int), position: (int, int), action: callable,
             elevation: int = 8, border_radius: int = 16
     ):
-        """"""
-        # Initialisation du bouton
+        """
+        Construit une nouvelle instance de la classe 'PushButton' représentant un bouton poussoir
+        et héritant de la classe 'Button'.
+
+        Le bouton poussoir fonctionne de la même manière qu'un bouton normal, à l'exception qu'il est animé
+        et est activé lorsqu'il est relâché.
+        """
+
+        # Appel du constructeur de la superclasse 'Button'
         super().__init__(label, size, position, action)
 
         # Attributs primaires

@@ -1,5 +1,7 @@
 """
-Un fichier contenant les composants du jeu.
+Un fichier contenant les composants du jeu,
+tel que la classe 'Game' représentant le jeu et la classe 'Dice' représentant un dé,
+pour gérer l'aléatoire
 """
 
 # Import de 'common.py'

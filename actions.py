@@ -79,9 +79,18 @@ class Bridge(Action):
     """
 
     def default(self):
-        """"""
+        """
+        Action par défaut, téléporte le joueur sur la prochaine case pont.
+        """
+
+        # Itère parmi les cases et leur position
         for position, tile in self.player.game.board.tiles.items():
+
+            # Si la position de la case est supérieure à celle du joueur
+            # et que la case est un pont
             if position > self.tile.index and tile.name == self.tile.name:
+
+                # Téléporte le joueur dessus
                 self.player.goose.go_to(tile.index)
 
 
@@ -91,9 +100,16 @@ class Dices(Action):
     """
 
     def default(self):
-        """"""
+        """
+        Action par défaut, relance les dés et fait avancer le joueur.
+        """
+
+        # Itère parmi les dés du jeu
         for dice in self.player.game.dices:
+            # Lance les dés
             dice.roll()
+
+        # Actualise le joueur, le faisant avancer
         self.player.update()
 
 
@@ -103,7 +119,11 @@ class End(Action):
     """
 
     def default(self):
-        """"""
+        """
+        Action par défaut, stoppe le joueur
+        """
+
+        # Stoppe le joueur
         self.player.stopped = True
 
 
@@ -113,7 +133,11 @@ class Goose(Action):
     """
 
     def default(self):
-        """"""
+        """
+        Action par défaut, fait avancer une deuxième fois l'oie de la distance qu'elle a parcourue.
+        """
+
+        # Fait avancer l'oie
         self.player.move_of(self.distance)
 
 
@@ -123,10 +147,19 @@ class Hotel(Action):
     """
 
     def activate(self):
-        """"""
+        """
+        Action sur plusieurs tours, stoppe le joueur.
+        """
+
+        # Stoppe le joueur
         self.player.stopped = True
     
     def update(self):
+        """
+        Met à jour l'action, libère le joueur, lui permettant de repartir.
+        """
+
+        # Libère le joueur
         self.player.stopped = False
 
 
@@ -139,13 +172,30 @@ class Jail(Action):
     queue = dict[int, 'Jail']()
 
     def activate(self):
-        """"""
+        """
+        Action sur plusieurs tours, lorsque le joueur arrive sur la case,
+        l'action vérifie si une action a déjà été créé pour cette case,
+        signifiant qu'un joueur en est déjà prisonnier.
+        Garde le joueur prisonnier sinon.
+        """
+
+        # Essaye de récupérer l'action à la position de la case
         action: Jail = Jail.queue.get(self.tile.index)
+
+        # Si l'action est inexistante
         if action is None:
+
+            # Ajoute l'action dans la queue des actions
             Jail.queue[self.tile.index] = self
+            # Stoppe le joueur
             self.player.stopped = True
+
+        # Si elle existe
         else:
+
+            # Libère le joueur
             action.player.stopped = False
+            # Supprime l'action
             self.discard()
 
 
@@ -155,7 +205,11 @@ class Maze(Action):
     """
 
     def default(self):
-        """"""
+        """
+        Action par défaut, fait reculer le joueur de 12 cases.
+        """
+
+        # Fait reculer le joueur
         self.player.move_of(-12)
 
 
@@ -165,7 +219,11 @@ class Skull(Action):
     """
 
     def default(self):
-        """"""
+        """
+        Action par défaut, fait recommencer le joueur du début.
+        """
+
+        # Téléporte le joueur à la première case
         self.player.goose.go_to(1)
 
 
@@ -177,17 +235,37 @@ class Well(Action):
     queue = dict[int, 'Well']()
 
     def activate(self):
-        """"""
+        """
+        Action sur plusieurs tours, lorsque le joueur arrive sur la case,
+        l'action vérifie si une action a déjà été créé pour cette case,
+        signifiant qu'un joueur en est déjà prisonnier,
+        le libère et emprisonne le joueur arrivant.
+        Garde le joueur prisonnier sinon.
+        """
+
+        # Essaye de récupérer l'action à la position de la case
         action: Well = Well.queue.get(self.tile.index)
+
+        # Si l'action est inexistante
         if action is None:
+
+            # Ajoute l'action dans la queue des actions
             Well.queue[self.tile.index] = self
+            # Stoppe le joueur
             self.player.stopped = True
+
+        # Si elle existe
         else:
+
+            # Libère le joueur prisonnier
             action.player.stopped = False
+            # Supprime l'ancienne action
             action.discard()
+            # Emprisonne le joueur arrivant
             self.player.stopped = True
 
 
+# Dictionnaire des actions par défaut
 DEFAULTS: dict[str, type] = {
     'bridge': Bridge,
     'dices': Dices,

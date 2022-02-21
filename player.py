@@ -1,4 +1,6 @@
 """
+Ce fichier contient la définition de la classe 'Player',
+représentant un joueur.
 """
 
 # Import de 'common.py'
@@ -19,10 +21,25 @@ class Player(Savable):
     """
 
     def __init__(self, game_: 'game.Game', identifier: int, color: list[int] or tuple[int]):
+        """
+        Construit une nouvelle instance de la classe 'Player' représentant un joueur.
+        Un joueur est associé à un jeu, possède un identifiant correspondant à son indice dans le dictionnaire
+        des joueurs du jeu, ainsi qu'une oie et des effets.
+        """
+
+        # Le jeu
         self.game = game_
+
+        # L'identifiant
         self.id = identifier
+
+        # Les effets du joueur
         self.effects: dict[str, 'actions.Action'] = {}
+
+        # L'état du joueur (False lui permet de se mouvoir, et True non)
         self.stopped = False
+
+        # L'oie du joueur
         self.goose = goose.Goose(self, color)
 
     def __getstate__(self) -> dict: ...

@@ -13,7 +13,6 @@ import player
 
 # Définition des classes
 
-# todo: documentation
 class Goose(pygame.sprite.Sprite, Savable):
     """
     Classe représentant l'oie que contrôle le joueur.
