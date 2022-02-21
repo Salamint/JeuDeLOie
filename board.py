@@ -86,24 +86,60 @@ class Board(Savable):
         Charge un plateau de jeu depuis un fichier JSON.
         """
 
-        # Ouvre un fichier
-        with open(file_name, "r") as file:
-            # Charge les informations du fichier
-            data = json.load(file)
-            # Ferme le fichier
-            file.close()
+        # Tente d'ouvrir et de charger le contenu du fichier
+        try:
+
+            # Ouvre un fichier
+            with open(file_name, "r") as file:
+                # Charge les informations du fichier
+                data = json.load(file)
+                # Ferme le fichier
+                file.close()
+
+        # Si le fichier est introuvable
+        except FileNotFoundError:
+            # Lève une exception de chargement
+            raise LoadingException(file_name, "Cannot load a file that does not exist!")
+
+        # S'il n'est pas possible de lire le fichier
+        except json.JSONDecodeError as error:
+            # Lève une exception de chargement
+            raise LoadingException(file_name, error.msg)
 
         # Stocke la largeur et hauteur du plateau
-        width, height = data.get('width', 8), data.get('height', 8)
+        width: int = data.get('width', 8)
+        height: int = data.get('height', 8)
+
+        # Vérifie que la largeur du plateau est comprise dans ]0;8]
+        if not 0 < width <= 8:
+            # Lève une exception de chargement
+            raise LoadingException(file_name, f"The width of the board should be in ]0;8], got {width} instead!")
+
+        # Vérifie que la largeur du plateau est comprise dans ]0;8]
+        if not 0 < height <= 8:
+            # Lève une exception de chargement
+            raise LoadingException(file_name, f"The height of the board should be in ]0;8], got {height} instead!")
 
         # Crée une cartographie du plateau (emplacement des cases selon leur position)
-        tiles: dict[int, 'Tile'] = {}
+        board = dict[int, 'Tile']()
 
-        for position, tile in enumerate(data.get("tiles", [])):
-            tiles[position] = Tile(tile, position, spiral(width, height, position))
+        # Stocke les cases à charger dans une liste
+        tiles: list[str] = data.get("tiles", [])
+
+        # Stocke la taille attendue et la taille réelle du plateau
+        size, tiles_length = width * height, len(tiles)
+
+        # Vérifie que le nombre de cases est inférieur ou égal à la taille du plateau
+        if len(tiles) > size:
+            # Lève une exception de chargement
+            raise LoadingException(file_name, f"{size} tiles were expected but {tiles_length} were given!")
+
+        # Itère pour chaque case à charger avec leur indice en tant que position
+        for position, tile in enumerate(tiles):
+            board[position] = Tile(tile, position, spiral(width, height, position))
 
         # Crée et retourne un nouveau plateau de dimensions indiquées dans le fichier
-        return Board(width, height, tiles)
+        return Board(width, height, board)
     
     def __init__(self, width: int, height: int, tiles: dict[int, 'Tile']):
         """

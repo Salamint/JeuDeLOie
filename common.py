@@ -233,6 +233,32 @@ class Button(pygame.sprite.Sprite):
             self.hovering = False
 
 
+class LoadingException(Exception):
+    """
+    Une classe représentant une erreur de chargement, utilisé par le jeu et le plateau lors du chargement de fichiers.
+    """
+
+    def __init__(self, file: str, *messages: str):
+        """
+        Construit une nouvelle instance de la classe 'LoadingError' représentant une erreur de chargement.
+        """
+
+        # Appel du constructeur de la superclasse 'Exception'
+        super().__init__()
+
+        # Stocke le message à afficher
+        message = " ".join(messages)
+        self.message = f"[{file}]: {message}"
+
+    def __str__(self) -> str:
+        """
+        Renvoie une chaîne de caractères représentant le message de l'erreur.
+        """
+
+        # Retourne le message d'erreur
+        return self.message
+
+
 class PushButton(Button):
     """
     Classe représentant un bouton poussoir, qui fait une animation lorsqu'il est pressé, et ne s'active
@@ -394,7 +420,7 @@ class Task(abc.ABC):
     qui se charge de l'actualisation de la tâche.
     """
 
-    def __init__(self, app: Application):
+    def __init__(self, app: 'Application'):
         """
         Construit une nouvelle instance d'une tâche avec des attributs par défaut.
         Une tâche doit être associée avec une application.

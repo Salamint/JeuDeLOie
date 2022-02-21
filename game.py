@@ -103,7 +103,7 @@ class Game(Task, Savable):
     display et update.
     """
 
-    def __init__(self, app: Application):
+    def __init__(self, app: 'Application'):
         """
         Construit une nouvelle instance de Game.
         Un jeu à des joueurs, un plateau, es dés, des règles et des statistiques.
@@ -115,8 +115,15 @@ class Game(Task, Savable):
         # fichier dans lequel la partie est enregistrée
         self.file = None
 
-        # Création du plateau de jeu
-        self.board = board.Board.from_file("data/board.json")
+        # Tente de générer un plateau à partir des fichiers du jeu
+        try:
+            # Charge le fichier
+            self.board = board.Board.from_file("data/board.json")
+        # Si une exception de chargement est levée (probablement de mauvaises valeurs fournies)
+        except LoadingException:
+            # Quitte la partie pour ne pas risquer d'erreurs
+            self.quit()
+
         # Mode de jeu (multijoueur)
         self.multiplayer = multiplayer.SAME_MACHINE
         # Groupe de sprites d'oies

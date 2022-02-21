@@ -133,7 +133,7 @@ class TitleScreen(Task):
     Classe représentant l'écran de démarrage du jeu.
     """
 
-    def __init__(self, app: Application):
+    def __init__(self, app: 'Application'):
         """
         Construit une nouvelle instance de la classe TitleScreen.
         L'écran titre est constitué d'un titre, de boutons permettant de créer une nouvelle partie,
