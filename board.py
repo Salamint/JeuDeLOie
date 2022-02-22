@@ -6,6 +6,10 @@ en rapport avec le plateau de jeu.
 # Import de 'common.py'
 from common import *
 
+# Import d'autres fichiers
+import actions
+import player
+
 
 # Définition des fonctions
 
@@ -71,7 +75,6 @@ def spiral(width: int, height: int, position: int, padding: int = 0) -> (int, in
 
 # Définition des classes
 
-# todo: documentation
 class Board(Savable):
     """
     Une classe qui représente le plateau du jeu.
@@ -80,138 +83,174 @@ class Board(Savable):
     @staticmethod
     def from_file(file_name: str):
         """
-        Crée un objet Board depuis un fichier JSON.
+        Charge un plateau de jeu depuis un fichier JSON.
         """
 
-        with open(file_name, "r") as file:
-            info = json.load(file)
-            file.close()
+        # Tente d'ouvrir et de charger le contenu du fichier
+        try:
 
-        board = Board(info.get('width', 8), info.get('height', 8))
+            # Ouvre un fichier
+            with open(file_name, "r") as file:
+                # Charge les informations du fichier
+                data = json.load(file)
+                # Ferme le fichier
+                file.close()
 
-        for tile in info.get('tiles', []):
-            board.add_tile(tile)
-        
-        return board
+        # Si le fichier est introuvable
+        except FileNotFoundError:
+            # Lève une exception de chargement
+            raise LoadingException(file_name, "Cannot load a file that does not exist!")
 
-    @staticmethod
-    def generate(width: int, height: int) -> {int: (int, int)}:
-        """"""
-        mapping = {}
+        # S'il n'est pas possible de lire le fichier
+        except json.JSONDecodeError as error:
+            # Lève une exception de chargement
+            raise LoadingException(file_name, error.msg)
 
-        for position in range(width * height):
-            mapping.setdefault(position, spiral(width, height, position))
+        # Stocke la largeur et hauteur du plateau
+        width: int = data.get('width', 8)
+        height: int = data.get('height', 8)
 
-        return mapping
+        # Vérifie que la largeur du plateau est comprise dans ]0;8]
+        if not 0 < width <= 8:
+            # Lève une exception de chargement
+            raise LoadingException(file_name, f"The width of the board should be in ]0;8], got {width} instead!")
 
-    @staticmethod
-    def get_surface_size(width: int, height: int) -> (int, int):
-        """
-        Une méthode statique qui retourne la largeur et la hauteur d'un plateau en pixels, et de taille donnée,
-        en utilisant les constantes de la classe Tile.
-        """
-        return width * Tile.WIDTH, height * Tile.HEIGHT
+        # Vérifie que la largeur du plateau est comprise dans ]0;8]
+        if not 0 < height <= 8:
+            # Lève une exception de chargement
+            raise LoadingException(file_name, f"The height of the board should be in ]0;8], got {height} instead!")
+
+        # Crée une cartographie du plateau (emplacement des cases selon leur position)
+        board = dict[int, 'Tile']()
+
+        # Stocke les cases à charger dans une liste
+        tiles: list[str] = data.get("tiles", [])
+
+        # Stocke la taille attendue et la taille réelle du plateau
+        size, tiles_length = width * height, len(tiles)
+
+        # Vérifie que le nombre de cases est inférieur ou égal à la taille du plateau
+        if len(tiles) > size:
+            # Lève une exception de chargement
+            raise LoadingException(file_name, f"{size} tiles were expected but {tiles_length} were given!")
+
+        # Itère pour chaque case à charger avec leur indice en tant que position
+        for position, tile in enumerate(tiles):
+            board[position] = Tile(tile, position, spiral(width, height, position))
+
+        # Crée et retourne un nouveau plateau de dimensions indiquées dans le fichier
+        return Board(width, height, board)
     
-    def __init__(self, width: int, height: int):
+    def __init__(self, width: int, height: int, tiles: dict[int, 'Tile']):
         """
-        Construit un objet Board avec les tuiles du plateau en paramètre.
-        `size`: Définit la taille du plateau de jeu, en donnant le nombre de tuiles
-        en hauteur et en largeur, et une tuile a une taille par défaut de 128 px par 128 px.
-        `tiles`: Les tuiles déjà chargées sont fournies en argument.
+        Construit une nouvelle instance de la classe Board avec les cases
+        et les dimensions du plateau en paramètre.
         """
-        self.width, self.height = width, height
+
+        # Dimensions du plateau
+        self.width = width
+        self.height = height
+
+        # Surface et tuiles du plateau
         self.surface = pygame.Surface((self.width * Tile.WIDTH, self.height * Tile.HEIGHT))
+        self.tiles = tiles
 
-        self.mapping = Board.generate(self.width, self.height)
-        self.tiles = pygame.sprite.Group()
-
+        # Affiche le plateau
         self.display()
-    
-    def __getstate__(self) -> dict:
-        """"""
-        state = self.__dict__.copy()
-        state.update(
-            {
-                'width': self.width,
-                'height': self.height,
-                'tiles': [getattr(tile, "file") for tile in self.tiles]
-            }
-        )
-        return state
-    
-    def __setstate__(self, state: dict):
-        """"""
-        self.__init__(state['width'], state['height'])
-    
-    def add_tile(self, name: str):
-        """"""
-        position = len(self.tiles)
-        tile = Tile(self, name, self.get_at(position))
-        if position > 0:
-            tile.image.blit(
-                pygame.font.SysFont("consolas", 12).render(f"{position}", True, '#000000', '#c3c3c3'),
-                (4, 4)
-            )
-        self.tiles.add(tile)
-    
+
+    def __getstate__(self) -> dict: ...
+
+    def __setstate__(self, state: dict): ...
+
     def display(self):
-        """"""
-        self.tiles.draw(self.surface)
-    
-    def get_at(self, position: int = None) -> (int, int) or None:
         """
-        Retourne les coordonnées de l'emplacement de la prochaine tuile,
-        sert à créer une spirale.
+        Affiche l'ensemble des cases du plateau sur la surface qui leur est destinée.
         """
-        return self.mapping.get(position)
+        for tile in self.tiles.values():
+            self.surface.blit(tile.image, tile.rect)
 
     @property
     def size(self):
+        """
+        Retourne la superficie du plateau de jeu (en nombre de cases).
+        Peut servir à calculer le nombre de cases totales que le plateau compte.
+        """
         return self.width * self.height
     
     def update(self, event: pygame.event.Event):
-        self.tiles.update(event)
+        """
+        Met à jour l'ensemble des cases du plateau de jeu, à l'aide d'un événement.
+        """
+        for tile in self.tiles.values():
+            tile.update(event)
 
 
-class GooseAction:
+class Tile(pygame.sprite.Sprite, Savable):
     """
-    Un décorateur pour une action d'oie.
-    """
-
-    def __init__(self, function: callable):
-        """"""
-        self.function = function
-    
-    def __call__(self, goose) -> None:
-        """"""
-        self.function(goose)
-
-
-# todo: documentation
-class Tile(pygame.sprite.Sprite):
-    """
-    Une classe qui représente une tuile du plateau.
+    Une classe qui représente une case du plateau.
 
     Une tuile est représentée par sa taille et position (rectangle),
     ainsi qu'une image et une action exécutée lorsqu'un joueur atterri dessus.
     """
 
-    # Constantes représentant la largeur et la hauteur d'une tuile (ne pas modifier).
+    # Constantes représentant les dimensions d'une case (à ne pas modifier).
     WIDTH = 64
     HEIGHT = 64
 
-    def __init__(self, board: Board, name: str, position: (int, int)):
-        """"""
+    def __init__(self, name: str, index: int, position: (int, int)):
+        """
+        Construit une instance de la classe Tile.
+        Une case requiert un nom, une position (coordonnées) et optionnellement
+        un indice à afficher en haut à gauche de la case.
+        """
+
+        # Appel le constructeur de la superclasse
         super().__init__()
-        self.board = board
 
+        # Le nom de la case
         self.name = name
+        # L'indice de la case
+        self.index = index
+        # Ses coordonnées
+        self.x, self.y = position
 
+        # Ouvre le fichier des tuiles en mode lecture
         with open("data/tiles.json", "r") as file:
+
+            # Charge dans un dictionnaire les informations du fichier
             data = json.load(file)
-            self.action = data.get(self.name)
+
+            # Récupère l'action associée à la case (None lorsque introuvable)
+            self.action = actions.DEFAULTS.get(data.get(self.name))
+            # Charge l'image correspondant à la case
             self.image = pygame.image.load(f"assets/tiles/{self.name}.jpg").convert()
 
+        # Si un indice est passé en paramètres, c'est qu'il est à afficher
+        if index != 0:
+            # L'afficher sur l'image de la case
+            self.image.blit(
+                tile_font.render(str(index), True, '#000000', '#c3c3c3'),
+                (4, 4)
+            )
+
+        # Le rectangle de la case
         self.rect = self.image.get_rect()
-        self.rect.x = position[0] * Tile.WIDTH
-        self.rect.y = position[1] * Tile.HEIGHT
+        self.rect.x = self.x * Tile.WIDTH
+        self.rect.y = self.y * Tile.HEIGHT
+
+    def __getstate__(self) -> dict: ...
+
+    def __setstate__(self, state: dict): ...
+
+    def activate(self, distance: int, p: player.Player):
+        """
+        Méthode appelée lorsqu'un joueur arrive sur cette case.
+        Ajoute une action à la liste des effets du joueur.
+        """
+
+        # Si l'action de la case n'est pas nulle (inexistante)
+        if self.action is not None:
+            # Ajouter une nouvelle action à la liste d'effets du joueur
+            action = self.action(distance, self, p)
+            p.effects[self.name] = action
+            action.activate()

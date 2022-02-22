@@ -1,5 +1,7 @@
 """
-Un fichier contenant les composants du jeu.
+Un fichier contenant les composants du jeu,
+tel que la classe 'Game' représentant le jeu et la classe 'Dice' représentant un dé,
+pour gérer l'aléatoire
 """
 
 # Import de 'common.py'
@@ -20,7 +22,14 @@ class Dice(pygame.sprite.Sprite):
     sont lancés de façon aléatoire et ont six faces.
     """
 
-    def __init__(self, game, position: (int, int)):
+    @staticmethod
+    def random() -> int:
+        """
+        Simule un lancé de dé en retournant un nombre aléatoire entre 1 et 6.
+        """
+        return random.randint(1, 6)
+
+    def __init__(self, game: 'Game', position: (int, int)):
         """
         Construit une nouvelle instance de dé
         """
@@ -31,6 +40,11 @@ class Dice(pygame.sprite.Sprite):
         # La partie en cours
         self.game = game
 
+        # Valeur du dé
+        self.value = 1
+        # Si le dé a changé entre temps
+        self.rolled = False
+
         # Liste contenant tous les sprites de dés allant de 1 à 6
         self.dices = [
             pygame.image.load(f"assets/dice/{number + 1}.png").convert_alpha()
@@ -38,10 +52,32 @@ class Dice(pygame.sprite.Sprite):
         ]
 
         # Image par défaut à 0 (1 point)
-        self.image = self.dices[0]
+        self.image = self.dices[self.value - 1]
         # Rectangle (position et taille)
         self.rect = self.image.get_rect()
         self.rect.x, self.rect.y = position
+    
+    def get_value(self):
+        """
+        Retourne la valeur du dé et réinitialise l'état du dé.
+        """
+
+        # Réinitialise l'état du dé
+        self.rolled = False
+        # Retourne la valeur du dé
+        return self.value
+    
+    def roll(self):
+        """
+        Lance le dé, change son apparence et sa valeur.
+        """
+
+        # Stocke le résultat du lancé de dé
+        self.value = Dice.random()
+        # Change l'image du dé au nombre correspondant
+        self.image = self.dices[self.value - 1]
+        # Indique que le dé a été lancé
+        self.rolled = True
 
     def update(self, event: pygame.event.Event):
         """
@@ -53,12 +89,8 @@ class Dice(pygame.sprite.Sprite):
         # Si une touche est pressée, et qu'il s'agit de la barre espace
         if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
 
-            # Stocke le résultat du lancé de dé
-            result = roll_dice()
-            # Change l'image du dé au nombre correspondant
-            self.image = self.dices[result - 1]
-            # Fait avancer le joueur du nombre de cases indiquées
-            self.game.get_player().forward(result)
+            # Lance le dé
+            self.roll()
 
 
 class Game(Task, Savable):
@@ -71,7 +103,7 @@ class Game(Task, Savable):
     display et update.
     """
 
-    def __init__(self, app: Application):
+    def __init__(self, app: 'Application'):
         """
         Construit une nouvelle instance de Game.
         Un jeu à des joueurs, un plateau, es dés, des règles et des statistiques.
@@ -83,15 +115,22 @@ class Game(Task, Savable):
         # fichier dans lequel la partie est enregistrée
         self.file = None
 
-        # Création du plateau de jeu
-        self.board = board.Board.from_file("data/board.json")
+        # Tente de générer un plateau à partir des fichiers du jeu
+        try:
+            # Charge le fichier
+            self.board = board.Board.from_file("data/board.json")
+        # Si une exception de chargement est levée (probablement de mauvaises valeurs fournies)
+        except LoadingException:
+            # Quitte la partie pour ne pas risquer d'erreurs
+            self.quit()
+
         # Mode de jeu (multijoueur)
         self.multiplayer = multiplayer.SAME_MACHINE
         # Groupe de sprites d'oies
         self.geese = pygame.sprite.Group()
 
         # L'état du jeu (en pause ou pas), attribut privé, accessible depuis les méthodes pause et resume
-        self.__pause = False
+        self.paused = False
         # Menu de pause
         self.pause_menu = pygame.sprite.Group()
         buttons_size = (256, 64)
@@ -124,20 +163,9 @@ class Game(Task, Savable):
             Dice(self, (dices_x, 448))
         )
 
-    # todo: améliorer les sauvegardes et documenter les méthodes spécifiées
-    def __getnewargs__(self) -> tuple:
-        return self.app,
+    def __getstate__(self) -> dict: ...
 
-    def __getstate__(self) -> dict:
-        """"""
-        state = self.__dict__.copy()
-        state['timer'] -= time.perf_counter()
-        return state
-
-    def __setstate__(self, state: dict):
-        """"""
-        state['timer'] += time.perf_counter()
-        self.__dict__ = state.copy()
+    def __setstate__(self, state: dict): ...
 
     def add_player(self):
         """
@@ -181,11 +209,11 @@ class Game(Task, Savable):
             self.app.screen.blit(dice.image, dice.rect)
 
         # Si le jeu est en pause
-        if self.__pause:
+        if self.paused:
             # Afficher le menu de pause
             self.pause_menu.draw(self.app.screen)
 
-    def get_player(self) -> player.Player:
+    def get_player(self) -> 'player.Player':
         """
         Retourne le joueur en train de jouer (à qui c'est le tour).
         """
@@ -206,16 +234,12 @@ class Game(Task, Savable):
             # Reprendre depuis le début
             self.turn = 0
 
-    # todo: revoir cette méthode
-    def play(self):
-        self.is_playing = True
-
     def pause(self):
         """
         Met le jeu en pause, empêche les éléments tels que le plateau ou les dés d'être mis à jour,
         mais continuera de les afficher.
         """
-        self.__pause = True
+        self.paused = True
 
     def quit(self):
         """
@@ -227,7 +251,7 @@ class Game(Task, Savable):
         """
         Rétablit le jeu là où il s'était arrêté et arrête la pause.
         """
-        self.__pause = False
+        self.paused = False
 
     def save(self):
         """
@@ -238,9 +262,9 @@ class Game(Task, Savable):
         # Si le fichier n'existait pas
         if self.file is None:
             # Compte le nombre de fichiers dans le dossier des sauvegardes
-            save_number = len(os.listdir(access_directory(SAVE_PATH)))
+            save_number = len(os.listdir(access_directory(SAVES_PATH)))
             # Stocke le nom du fichier de sauvegarde
-            self.file = f"{SAVE_PATH}/save#{save_number}.pickle"
+            self.file = f"{SAVES_PATH}/save#{save_number}.pickle"
 
         # Sauvegarde le jeu
         with open(self.file, "wb") as file:
@@ -256,7 +280,7 @@ class Game(Task, Savable):
         """
 
         # Si le jeu est en pause
-        if self.__pause:
+        if self.paused:
 
             # Si la touche espace est pressée
             if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
@@ -280,7 +304,7 @@ class Game(Task, Savable):
 
             # Met à jour le plateau de jeu
             self.board.update(event)
-            # Met à jour les joueurs
+            # Met à jour les oies des joueurs
             self.geese.update(event)
-            # Met à jour le tour de jeu
-            self.play()
+            # Met à jour le joueur tour de jeu
+            self.get_player().update()

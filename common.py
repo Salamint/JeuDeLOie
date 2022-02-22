@@ -37,7 +37,7 @@ screen = pygame.display.set_mode(screen_size)
 
 # Constantes
 MAX_PLAYERS = 4
-SAVE_PATH = "data/saves"
+SAVES_PATH = "data/saves"
 
 # Couleurs
 geese_colors = [
@@ -57,6 +57,7 @@ push_buttons_colors = {
 # Polices d'écriture
 debug_font = pygame.font.SysFont("consolas", 20)
 default_font = pygame.font.Font(None, 30)
+tile_font = pygame.font.SysFont("consolas", 12)
 sans_font = pygame.font.SysFont("Comic Sans MS", 60)
 
 
@@ -113,13 +114,6 @@ def center_width(width: int, container: int):
     Centre une largeur à partir d'une première largeur, et d'une largeur servant de conteneur.
     """
     return container // 2 - width // 2
-
-
-def roll_dice() -> int:
-    """
-    Simule un lancé de dé en retournant un nombre aléatoire entre 1 et 6.
-    """
-    return random.randint(1, 6)
 
 
 # Définition des classes et interfaces
@@ -239,16 +233,52 @@ class Button(pygame.sprite.Sprite):
             self.hovering = False
 
 
-class PushButton(Button):
-    """"""
+class LoadingException(Exception):
+    """
+    Une classe représentant une erreur de chargement, utilisé par le jeu et le plateau lors du chargement de fichiers.
+    """
 
-    # todo: documentation
+    def __init__(self, file: str, *messages: str):
+        """
+        Construit une nouvelle instance de la classe 'LoadingError' représentant une erreur de chargement.
+        """
+
+        # Appel du constructeur de la superclasse 'Exception'
+        super().__init__()
+
+        # Stocke le message à afficher
+        message = " ".join(messages)
+        self.message = f"[{file}]: {message}"
+
+    def __str__(self) -> str:
+        """
+        Renvoie une chaîne de caractères représentant le message de l'erreur.
+        """
+
+        # Retourne le message d'erreur
+        return self.message
+
+
+class PushButton(Button):
+    """
+    Classe représentant un bouton poussoir, qui fait une animation lorsqu'il est pressé, et ne s'active
+    que lorsqu'il est relâché.
+    Il est possible en plus de choisir sa couleur, le rayon de l'arrondissement des angles ainsi que l'élévation.
+    """
+
     def __init__(
             self, label: str, size: (int, int), position: (int, int), action: callable,
             elevation: int = 8, border_radius: int = 16
     ):
-        """"""
-        # Initialisation du bouton
+        """
+        Construit une nouvelle instance de la classe 'PushButton' représentant un bouton poussoir
+        et héritant de la classe 'Button'.
+
+        Le bouton poussoir fonctionne de la même manière qu'un bouton normal, à l'exception qu'il est animé
+        et est activé lorsqu'il est relâché.
+        """
+
+        # Appel du constructeur de la superclasse 'Button'
         super().__init__(label, size, position, action)
 
         # Attributs primaires
@@ -390,7 +420,7 @@ class Task(abc.ABC):
     qui se charge de l'actualisation de la tâche.
     """
 
-    def __init__(self, app: Application):
+    def __init__(self, app: 'Application'):
         """
         Construit une nouvelle instance d'une tâche avec des attributs par défaut.
         Une tâche doit être associée avec une application.
