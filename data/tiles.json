@@ -1,0 +1,13 @@
+{
+  "bridge": "bridge",
+  "default": null,
+  "dices": "dices",
+  "end": "end",
+  "goose": "goose",
+  "hotel": "hotel",
+  "jail": "jail",
+  "maze": "maze",
+  "skull": "skull",
+  "start": null,
+  "well": "well"
+}

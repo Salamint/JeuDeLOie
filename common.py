@@ -37,7 +37,7 @@ screen = pygame.display.set_mode(screen_size)
 
 # Constantes
 MAX_PLAYERS = 4
-SAVE_PATH = "data/saves"
+SAVES_PATH = "data/saves"
 
 # Couleurs
 geese_colors = [
@@ -57,6 +57,7 @@ push_buttons_colors = {
 # Polices d'écriture
 debug_font = pygame.font.SysFont("consolas", 20)
 default_font = pygame.font.Font(None, 30)
+tile_font = pygame.font.SysFont("consolas", 12)
 sans_font = pygame.font.SysFont("Comic Sans MS", 60)
 
 
@@ -77,14 +78,21 @@ def access_directory(directory: str) -> str:
     return directory
 
 
+def center_height(height: int, container: int):
+    """
+    Centre une hauteur à partir d'une première hauteur, et d'une hauteur servant de conteneur.
+    """
+    return container // 2 - height // 2
+
+
 def center_rect(rect: pygame.Rect, container: pygame.Rect) -> (int, int):
     """
     Une fonction permettant de centrer une surface à l'intérieur d'une autre surface.
     Renvoie uniquement des coordonnées, ne modifie aucune des deux surfaces.
     """
     return (
-        container.width // 2 - rect.width // 2,
-        container.height // 2 - rect.height // 2
+        center_width(rect.width, container.width),
+        center_height(rect.height, container.height)
     )
 
 
@@ -93,24 +101,23 @@ def center_surface(surface: pygame.Surface, container: pygame.Surface) -> (int, 
     Une fonction permettant de centrer une surface à l'intérieur d'une autre surface.
     Renvoie uniquement des coordonnées, ne modifie aucune des deux surfaces.
     """
-    text_width, text_height = surface.get_size()
+    content_width, content_height = surface.get_size()
     container_width, container_height = container.get_size()
     return (
-        container_width // 2 - text_width // 2,
-        container_height // 2 - text_height // 2
+        center_width(content_width, container_width),
+        center_height(content_height, container_height)
     )
 
 
-def roll_dice() -> int:
+def center_width(width: int, container: int):
     """
-    Simule un lancé de dé en retournant un nombre aléatoire entre 1 et 6.
+    Centre une largeur à partir d'une première largeur, et d'une largeur servant de conteneur.
     """
-    return random.randint(1, 6)
+    return container // 2 - width // 2
 
 
 # Définition des classes et interfaces
 
-# todo : documentation
 class Application(abc.ABC):
     """
     Classe abstraite représentant une application.
@@ -122,24 +129,33 @@ class Application(abc.ABC):
     """
 
     def __init__(self, __screen: pygame.Surface, task: type):
-        """"""
+        """
+        Construit une nouvelle instance d'une application avec des attributs par défaut.
+        Une application doit avoir un écran, une tâche et une tâche par défaut.
+        """
         self.screen = __screen
         self.default_task: type = task
         self.task: Task = self.default_task(self)
 
     @abc.abstractmethod
     def display(self):
-        """"""
+        """
+        Méthode abstraite à implémenter servant à l'affichage de l'application sur un écran.
+        """
         pass
 
     @abc.abstractmethod
     def quit(self):
-        """"""
+        """
+        Méthode abstraite à implémenter qui ferme l'application en cours.
+        """
         pass
 
     @abc.abstractmethod
     def start(self):
-        """"""
+        """
+        Méthode abstraite à implémenter qui démarre l'application en cours.
+        """
         pass
 
 
@@ -217,16 +233,52 @@ class Button(pygame.sprite.Sprite):
             self.hovering = False
 
 
-class PushButton(Button):
-    """"""
+class LoadingException(Exception):
+    """
+    Une classe représentant une erreur de chargement, utilisé par le jeu et le plateau lors du chargement de fichiers.
+    """
 
-    # todo: documentation
+    def __init__(self, file: str, *messages: str):
+        """
+        Construit une nouvelle instance de la classe 'LoadingError' représentant une erreur de chargement.
+        """
+
+        # Appel du constructeur de la superclasse 'Exception'
+        super().__init__()
+
+        # Stocke le message à afficher
+        message = " ".join(messages)
+        self.message = f"[{file}]: {message}"
+
+    def __str__(self) -> str:
+        """
+        Renvoie une chaîne de caractères représentant le message de l'erreur.
+        """
+
+        # Retourne le message d'erreur
+        return self.message
+
+
+class PushButton(Button):
+    """
+    Classe représentant un bouton poussoir, qui fait une animation lorsqu'il est pressé, et ne s'active
+    que lorsqu'il est relâché.
+    Il est possible en plus de choisir sa couleur, le rayon de l'arrondissement des angles ainsi que l'élévation.
+    """
+
     def __init__(
             self, label: str, size: (int, int), position: (int, int), action: callable,
             elevation: int = 8, border_radius: int = 16
     ):
-        """"""
-        # Initialisation du bouton
+        """
+        Construit une nouvelle instance de la classe 'PushButton' représentant un bouton poussoir
+        et héritant de la classe 'Button'.
+
+        Le bouton poussoir fonctionne de la même manière qu'un bouton normal, à l'exception qu'il est animé
+        et est activé lorsqu'il est relâché.
+        """
+
+        # Appel du constructeur de la superclasse 'Button'
         super().__init__(label, size, position, action)
 
         # Attributs primaires
@@ -331,7 +383,6 @@ class PushButton(Button):
             self.hovering = False
 
 
-# todo: documentation
 class Savable(abc.ABC):
     """
     Classe abstraite représentant une tâche.
@@ -344,12 +395,18 @@ class Savable(abc.ABC):
 
     @abc.abstractmethod
     def __getstate__(self) -> dict:
-        """"""
+        """
+        Méthode abstraite à implémenter qui sert à la sauvegarde de l'objet.
+        Doit retourner un dictionnaire des attributs, et ne demande aucun argument.
+        """
         pass
 
     @abc.abstractmethod
     def __setstate__(self, state: dict):
-        """"""
+        """
+        Méthode abstraite à implémenter qui sert au chargement de l'objet.
+        Ne dois rien retourner et demande un dictionnaire des attributs en argument.
+        """
         pass
 
 
@@ -363,9 +420,11 @@ class Task(abc.ABC):
     qui se charge de l'actualisation de la tâche.
     """
 
-    def __init__(self, app: Application):
-        # todo: documentation
-        """"""
+    def __init__(self, app: 'Application'):
+        """
+        Construit une nouvelle instance d'une tâche avec des attributs par défaut.
+        Une tâche doit être associée avec une application.
+        """
         self.app = app
 
     @abc.abstractmethod
