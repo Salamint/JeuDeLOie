@@ -64,7 +64,7 @@ class Action:
         """
 
         # Retire l'action des effets du joueur
-        self.player.effects.pop(self.tile.name, self)
+        self.player.discard_effect(self.tile.name)
     
     def update(self) -> None:
         """

@@ -233,6 +233,46 @@ class Button(pygame.sprite.Sprite):
             self.hovering = False
 
 
+class ErrorMessage(pygame.sprite.Sprite):
+    """
+    Une classe représentant un message d'erreur qui peut être affiché sur l'écran
+    """
+
+    def __init__(self, app: 'Application', error: Exception):
+        """
+        Construit une nouvelle instance de la classe 'ErrorMessage' représentant un message d'erreur
+        pouvant être affiché à l'écran.
+        """
+
+        # Appel du constructeur de la superclasse
+        super().__init__()
+
+        # Stocke l'erreur
+        self.error = error
+
+        # Stocke les dimensions
+        width, height = 384, 128
+
+        # Image
+        self.image = pygame.Surface((width, height))
+        self.image.fill('#FFFFFF')
+        self.image.fill('#000000', pygame.Rect(8, 8, width - 16, height - 16))
+
+        # Rectangle
+        self.rect = pygame.Rect(
+            *center_rect(self.image.get_rect(), app.screen.get_rect()),
+            width, height
+        )
+
+        # Application du message
+        self.image.blit(debug_font.render("Une erreur est survenue, plus", True, '#FFFFFF'), (16, 24))
+        self.image.blit(debug_font.render("d'informations dans la console.", True, '#FFFFFF'), (16, 56))
+        self.image.blit(debug_font.render("Appuyez sur une touche ...", True, '#FFFFFF'), (16, 88))
+
+        # Affichage du message dans la console
+        print(self.error)
+
+
 class LoadingException(Exception):
     """
     Une classe représentant une erreur de chargement, utilisé par le jeu et le plateau lors du chargement de fichiers.

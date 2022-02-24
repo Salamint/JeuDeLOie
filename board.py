@@ -155,9 +155,6 @@ class Board(Savable):
         self.surface = pygame.Surface((self.width * Tile.WIDTH, self.height * Tile.HEIGHT))
         self.tiles = tiles
 
-        # Affiche le plateau
-        self.display()
-
     def __getstate__(self) -> dict: ...
 
     def __setstate__(self, state: dict): ...
@@ -251,6 +248,5 @@ class Tile(pygame.sprite.Sprite, Savable):
         # Si l'action de la case n'est pas nulle (inexistante)
         if self.action is not None:
             # Ajouter une nouvelle action à la liste d'effets du joueur
-            action = self.action(distance, self, p)
-            p.effects[self.name] = action
-            action.activate()
+            action: 'actions.Action' = self.action(distance, self, p)
+            p.add_effect(self.name, action).activate()
