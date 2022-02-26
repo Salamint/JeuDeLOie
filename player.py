@@ -8,6 +8,7 @@ from common import *
 
 # Imports d'autres fichiers
 import actions
+import board
 import game
 import goose
 
@@ -52,18 +53,33 @@ class HeadUpDisplay:
         # Affiche sur l'écran le temps écoulé
         self.app.screen.blit(self.time, (0, 600))
 
+        # Si le joueur n'est pas seul
+        if self.player.game.enough_players():
+            # Affiche à l'écran le tour du joueur
+            self.app.screen.blit(
+                default_font.render(f"Au tour du Joueur {self.player.id}", True, '#FFFFFF', '#000000'),
+                (16, 16)
+            )
+        # Sinon
+        else:
+            # Affiche à l'écran le tour du joueur
+            self.app.screen.blit(
+                default_font.render(f"En attente d'autres joueurs...", True, '#FFFFFF', '#000000'),
+                (16, 16)
+            )
+
+        # Affiche à l'écran la couleur du joueur
+        self.app.screen.blit(default_font.render("Couleur :", True, '#FFFFFF', '#000000'), (356, 16))
+        pygame.draw.rect(self.app.screen, self.player.goose.color, pygame.Rect(452, 8, 32, 32))
+
+        # Affiche à l'écran la liste des effets en cours
+        self.app.screen.blit(default_font.render("Effets en cours :", True, '#FFFFFF', '#000000'), (560, 16))
         # Affiche à l'écran la liste des effets en cours
         for index, effect in enumerate(self.player.effects):
             self.app.screen.blit(
                 pygame.transform.scale(self.player.effects[effect].tile.image, (32, 32)),
-                (640 + 40 * index, 8)
+                (740 + 40 * index, 8)
             )
-
-        # Affiche à l'écran
-        self.app.screen.blit(
-            default_font.render("Effets en cours :", True, '#FFFFFF', '#000000'),
-            (460, 16)
-        )
 
 
 class Player(Savable):
@@ -113,6 +129,26 @@ class Player(Savable):
         # Retourne l'action
         return action
 
+    def dice_move(self):
+        """
+        Fait avancer le joueur en fonction des dés.
+        """
+
+        # Marque la distance à parcourir
+        distance = 0
+
+        # Parcours tous les dés du jeu
+        for dice in self.game.dices:
+
+            # Si le dé a été lancé durant le tour
+            if dice.rolled:
+
+                # Ajoute la valeur du dé la distance et réinitialise l'état du dé
+                distance += dice.get_value()
+
+        # Fait avancer le joueur
+        self.move_of(distance)
+
     def discard_effect(self, name: str):
         """
         Supprime l'effet du dictionnaire des effets du joueur, ainsi que de son HUD.
@@ -135,22 +171,33 @@ class Player(Savable):
                 # S'il est impossible d'avancer, reculer
                 self.goose.move_of(-distance)
 
-    def update(self):
+            # Passe au tour suivant
+            self.game.next_turn()
+
+    def quit(self):
         """
-        Met à jour le joueur. Ne nécessite aucun événement.
+        Fait quitter le joueur du jeu. Sauvegarde sa progression.
         """
 
-        # Marque la distance à parcourir
-        distance = 0
+        # Ajoute le joueur au cache des joueurs en le supprimant des joueurs actifs
+        self.game.player_cache.append(self.game.players.pop(self.id))
 
-        # Parcours tous les dés du jeu
-        for dice in self.game.dices:
+    def update(self, event: pygame.event.Event):
+        """
+        Met à jour l'oie (placement).
+        """
 
-            # Si le dé a été lancé durant le tour
-            if dice.rolled:
+        # S'il y a assez de joueurs
+        if self.game.enough_players():
 
-                # Ajoute la valeur du dé la distance et réinitialise l'état du dé
-                distance += dice.get_value()
-        
-        # Fait avancer le joueur
-        self.move_of(distance)
+            # Met à jour les dés
+            for dice in self.game.dices:
+                dice.update(event)
+
+            # Fait avancer le joueur
+            self.dice_move()
+
+        # Met à jour la position de l'oie
+        tile = self.game.board.tiles.get(self.goose.position)
+        self.goose.rect.x = board.Tile.WIDTH * tile.x
+        self.goose.rect.y = board.Tile.HEIGHT * tile.y

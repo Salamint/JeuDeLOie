@@ -299,6 +299,14 @@ class LoadingException(Exception):
         return self.message
 
 
+class PlayerException(Exception):
+    """
+    Une classe représentant une erreur de joueur, utilisé par le jeu lors du tour de jeu des joueurs
+    ou lorsqu'ils rejoignent une partie.
+    Cette classe ne possède aucun corps.
+    """
+
+
 class PushButton(Button):
     """
     Classe représentant un bouton poussoir, qui fait une animation lorsqu'il est pressé, et ne s'active

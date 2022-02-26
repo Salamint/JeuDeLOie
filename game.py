@@ -104,6 +104,8 @@ class Game(Task, Savable):
     display et update.
     """
 
+    MINIMUM = 2
+
     def __init__(self, app: 'Application'):
         """
         Construit une nouvelle instance de Game.
@@ -145,7 +147,8 @@ class Game(Task, Savable):
         )
 
         # Liste des joueurs
-        self.players: list[player.Player] = []
+        self.players = list[player.Player]()
+        self.player_cache = list[player.Player]()
         # Tour de jeu
         self.turn = 0
         # Si un joueur est en train de jouer
@@ -211,6 +214,12 @@ class Game(Task, Savable):
         if self.paused:
             # Afficher le menu de pause
             self.pause_menu.draw(self.app.screen)
+
+    def enough_players(self) -> bool:
+        """
+        Indique si le nombre de joueurs nécessaire pour une partie est atteint.
+        """
+        return len(self.players) >= Game.MINIMUM
 
     def get_player(self) -> 'player.Player':
         """
@@ -300,18 +309,40 @@ class Game(Task, Savable):
         # Si l'écran n'est pas en pause
         else:
 
-            # Si la touche espace est pressée
-            if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-                # Mettre le jeu en pause
-                self.pause()
+            # Si une touche est pressée
+            if event.type == pygame.KEYDOWN:
 
-            # Met à jour les dés
-            for dice in self.dices:
-                dice.update(event)
+                # Si c'est la touche espace
+                if event.key == pygame.K_ESCAPE:
+                    # Mettre le jeu en pause
+                    self.pause()
+
+                # Si c'est la touche L
+                if event.key == pygame.K_l:
+
+                    # S'il y a plus d'un joueur en jeu
+                    if self.enough_players():
+                        # Faire quitter le joueur
+                        self.get_player().quit()
+                    # Sinon
+                    else:
+                        # Quitter la partie
+                        self.quit()
+
+                # Si c'est la touche J
+                if event.key == pygame.K_j:
+
+                    # Si des joueurs sont sauvegardés dans le cache
+                    if len(self.player_cache) > 0:
+                        # Ramener le dernier joueur aillant quitté
+                        self.players.append(self.player_cache.pop(-1))
+                    # Sinon
+                    else:
+                        # Créer un joueur
+                        self.add_player()
 
             # Met à jour le plateau de jeu
             self.board.update(event)
-            # Met à jour les oies des joueurs
-            self.geese.update(event)
-            # Met à jour le joueur tour de jeu
-            self.get_player().update()
+
+            # Met à jour le joueur en train de jouer
+            self.get_player().update(event)

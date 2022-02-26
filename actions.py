@@ -110,7 +110,7 @@ class Dices(Action):
             dice.roll()
 
         # Actualise le joueur, le faisant avancer
-        self.player.update()
+        self.player.dice_move()
 
 
 class End(Action):

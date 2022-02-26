@@ -18,7 +18,7 @@ class Goose(pygame.sprite.Sprite, Savable):
     Classe représentant l'oie que contrôle le joueur.
     """
 
-    def __init__(self, player_: 'player.Player', color: list or tuple):
+    def __init__(self, player_: 'player.Player', color: str or list or tuple):
         """
         Construit une nouvelle instance de la classe Goose représentant une oie.
         Une oie est associée à un joueur, possède une couleur, une position et d'autres attributs.
@@ -55,14 +55,24 @@ class Goose(pygame.sprite.Sprite, Savable):
     def __getstate__(self) -> dict: ...
 
     def __setstate__(self, state: dict): ...
-    
+
     def able_to_move(self, position: int) -> bool:
         """
         Retourne un booléen précisant si l'oie est en capacité de se déplacer,
         ou plus génériquement, si elle est en capacité de réaliser une action
         qui demande de stopper l'animation en cours.
         """
-        return not self.animating and not self.moving and 0 < position < self.player.game.board.size
+
+        # Stocke toutes les conditions
+        conditions = (
+            not self.animating,
+            not self.moving,
+            0 < position < self.player.game.board.size,
+            any(p.goose.position == position for p in self.player.game.players)
+        )
+
+        # Vérifie que toutes les conditions sont vraies
+        return all(conditions)
 
     def change_color(self, new: str or tuple, old: str or tuple):
         """
@@ -75,7 +85,7 @@ class Goose(pygame.sprite.Sprite, Savable):
             for y in range(self.image.get_height()):
                 if self.image.get_at((x, y)) == old:
                     self.image.set_at((x, y), new)
-    
+
     def go_to(self, position: int):
         """
         Déplace l'oie à une position donnée, si elle est atteignable.
@@ -87,25 +97,9 @@ class Goose(pygame.sprite.Sprite, Savable):
             tile.activate(self.position - self.last_position, self.player)
             return True
         return False
-    
+
     def move_of(self, tiles: int) -> bool:
         """
         Fait avancer l'oie d'un certain nombre de cases.
         """
         return self.go_to(self.position + tiles)
-    
-    def update(self, event: pygame.event.Event):
-        """
-        Met à jour l'oie (placement).
-        """
-
-        # todo : supprimer et remplacer par les jetés de dés
-        if event.type == pygame.KEYDOWN and self.player.stopped is False:
-            if event.key == pygame.K_LEFT:
-                self.move_of(-1)
-            elif event.key == pygame.K_RIGHT:
-                self.move_of(1)
-
-        tile = self.player.game.board.tiles.get(self.position)
-        self.rect.x = board.Tile.WIDTH * tile.x
-        self.rect.y = board.Tile.HEIGHT * tile.y
