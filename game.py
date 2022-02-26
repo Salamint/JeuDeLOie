@@ -31,7 +31,8 @@ class Dice(pygame.sprite.Sprite):
 
     def __init__(self, game: 'Game', position: (int, int)):
         """
-        Construit une nouvelle instance de dé
+        Construit une nouvelle instance de la classe 'Dice' représentant un dé
+        et permettant de simuler des lancés de dés.
         """
 
         # Appel le constructeur de la superclasse
@@ -47,7 +48,7 @@ class Dice(pygame.sprite.Sprite):
 
         # Liste contenant tous les sprites de dés allant de 1 à 6
         self.dices = [
-            pygame.image.load(f"assets/dice/{number + 1}.png").convert_alpha()
+            pygame.image.load(f"assets/dice/{number + 1}.png").convert()
             for number in range(6)
         ]
 
@@ -103,6 +104,8 @@ class Game(Task, Savable):
     display et update.
     """
 
+    MINIMUM = 2
+
     def __init__(self, app: 'Application'):
         """
         Construit une nouvelle instance de Game.
@@ -112,22 +115,24 @@ class Game(Task, Savable):
 
         # Appel du constructeur de la superclasse
         super().__init__(app)
-        # fichier dans lequel la partie est enregistrée
+        # Fichier dans lequel la partie est enregistrée
         self.file = None
+        # Erreurs possiblement levées lors de l'exécution du jeu, permettant d'afficher un message
+        self.error_message: 'ErrorMessage' or None = None
 
         # Tente de générer un plateau à partir des fichiers du jeu
         try:
             # Charge le fichier
             self.board = board.Board.from_file("data/board.json")
         # Si une exception de chargement est levée (probablement de mauvaises valeurs fournies)
-        except LoadingException:
+        except LoadingException as e:
             # Quitte la partie pour ne pas risquer d'erreurs
-            self.quit()
+            self.error_message = ErrorMessage(self.app, e)
 
         # Mode de jeu (multijoueur)
         self.multiplayer = multiplayer.SAME_MACHINE
-        # Groupe de sprites d'oies
-        self.geese = pygame.sprite.Group()
+        # Le gagnant de la partie
+        self.winner = None
 
         # L'état du jeu (en pause ou pas), attribut privé, accessible depuis les méthodes pause et resume
         self.paused = False
@@ -142,7 +147,8 @@ class Game(Task, Savable):
         )
 
         # Liste des joueurs
-        self.players: list[player.Player] = []
+        self.players = list[player.Player]()
+        self.player_cache = list[player.Player]()
         # Tour de jeu
         self.turn = 0
         # Si un joueur est en train de jouer
@@ -150,8 +156,6 @@ class Game(Task, Savable):
 
         # Un chronomètre de la partie
         self.timer = time.perf_counter()
-        # Surface d'affichage des statistiques
-        self.stats = pygame.Surface((screen_size[0], 32))
 
         self.add_player()
 
@@ -178,40 +182,51 @@ class Game(Task, Savable):
         if identifier < MAX_PLAYERS:
             p = player.Player(self, identifier, geese_colors[identifier])
             self.players.append(p)
-            self.geese.add(p.goose)
 
     def display(self):
         """
         Affiche les modifications sur l'écran.
         """
 
-        # Affiche le plateau de jeu
-        self.board.display()
-        # Affiche les oies
-        self.geese.draw(self.board.surface)
+        # Si une erreur n'a été levée
+        if self.error_message is not None:
 
-        # Récupère le temps écoulé depuis le début de la partie et en fait une structure de temps
-        current_time = time.gmtime(time.perf_counter() - self.timer)
-        # Formate le temps de la manière %H:%M:%S
-        statistic_text = debug_font.render(
-            time.strftime("Vous jouez depuis : %H:%M:%S", current_time),
-            True, (255, 255, 255), (0, 0, 0)
-        )
-        # Affiche l'heure sur la surface des statistiques
-        self.stats.blit(statistic_text, center_surface(statistic_text, self.stats))
+            # Affichage du message d'erreur
+            self.app.screen.blit(self.error_message.image, self.error_message.rect)
 
-        # Affiche sur l'écran les statistiques
-        self.app.screen.blit(self.stats, (0, 608))
-        # Affiche sur l'écran la surface du plateau
-        self.app.screen.blit(self.board.surface, (64, 64))
-        # Affiche les dés
-        for dice in self.dices:
-            self.app.screen.blit(dice.image, dice.rect)
+        # Si aucune erreur a été levée
+        else:
+
+            # Affiche le plateau de jeu
+            self.board.display()
+            # Affiche les oies
+            for player_ in self.players:
+                self.board.surface.blit(player_.goose.image, player_.goose.rect)
+            # Affiche sur l'écran la surface du plateau
+            self.app.screen.blit(self.board.surface, (64, 64))
+            # Affiche les dés
+            for dice in self.dices:
+                self.app.screen.blit(dice.image, dice.rect)
+            # Affiche l'affichage tête haute du joueur en train de jouer
+            self.get_player().hud.display()
+
+        # Si il y a un gagnant
+        if self.winner is not None:
+
+            # Afficher la victoire à l'écran
+            text = win_font.render(f"Victoire du joueur {self.winner.id + 1}", True, '#FFFFFF', '#000000')
+            self.app.screen.blit(text, center_surface(text, self.app.screen))
 
         # Si le jeu est en pause
         if self.paused:
             # Afficher le menu de pause
             self.pause_menu.draw(self.app.screen)
+
+    def enough_players(self) -> bool:
+        """
+        Indique si le nombre de joueurs nécessaire pour une partie est atteint.
+        """
+        return len(self.players) >= Game.MINIMUM
 
     def get_player(self) -> 'player.Player':
         """
@@ -279,8 +294,16 @@ class Game(Task, Savable):
         et le plateau du jeu, les oies et les dés le sont.
         """
 
+        # Si une erreur a été levée lors de l'exécution du jeu
+        if self.error_message is not None:
+
+            # Si une touche est pressée
+            if event.type == pygame.KEYDOWN or event.type == pygame.MOUSEBUTTONDOWN:
+                # Arrêter le jeu
+                self.quit()
+
         # Si le jeu est en pause
-        if self.paused:
+        elif self.paused:
 
             # Si la touche espace est pressée
             if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
@@ -293,18 +316,40 @@ class Game(Task, Savable):
         # Si l'écran n'est pas en pause
         else:
 
-            # Si la touche espace est pressée
-            if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-                # Mettre le jeu en pause
-                self.pause()
+            # Si une touche est pressée
+            if event.type == pygame.KEYDOWN:
 
-            # Met à jour les dés
-            for dice in self.dices:
-                dice.update(event)
+                # Si c'est la touche espace
+                if event.key == pygame.K_ESCAPE:
+                    # Mettre le jeu en pause
+                    self.pause()
+
+                # Si c'est la touche L
+                if event.key == pygame.K_l:
+
+                    # S'il y a plus d'un joueur en jeu
+                    if self.enough_players():
+                        # Faire quitter le joueur
+                        self.get_player().quit()
+                    # Sinon
+                    else:
+                        # Quitter la partie
+                        self.quit()
+
+                # Si c'est la touche J
+                if event.key == pygame.K_j:
+
+                    # Si des joueurs sont sauvegardés dans le cache
+                    if len(self.player_cache) > 0:
+                        # Ramener le dernier joueur aillant quitté
+                        self.players.append(self.player_cache.pop(-1))
+                    # Sinon
+                    else:
+                        # Créer un joueur
+                        self.add_player()
 
             # Met à jour le plateau de jeu
             self.board.update(event)
-            # Met à jour les oies des joueurs
-            self.geese.update(event)
-            # Met à jour le joueur tour de jeu
-            self.get_player().update()
+
+            # Met à jour le joueur en train de jouer
+            self.get_player().update(event)

@@ -15,6 +15,9 @@ class Action:
     Représente une action qu'un joueur peut activer en atterrissant sur une case spéciale.
     """
 
+    # Si l'action requiert un autre joueur pour mettre fin
+    other_player_rescue = False
+
     def __init__(self, distance: int, tile: 'board.Tile', p: 'player.Player'):
         """
         Construit une nouvelle instance de la classe 'Action'.
@@ -58,13 +61,19 @@ class Action:
         """
         pass
 
-    def discard(self) -> None:
+    def discard(self) -> 'Action':
         """
         Cette méthode supprime l'action de la liste des effets du joueur.
         """
 
         # Retire l'action des effets du joueur
-        self.player.effects.pop(self.tile.name, self)
+        return self.player.discard_effect(self.tile.name)
+
+    def rescue(self, player_: 'player.Player'):
+        """
+        Permet de secourir le joueur possédant l'action en fournissant le joueur délivrant en paramètre.
+        """
+        pass
     
     def update(self) -> None:
         """
@@ -110,7 +119,7 @@ class Dices(Action):
             dice.roll()
 
         # Actualise le joueur, le faisant avancer
-        self.player.update()
+        self.player.dice_move()
 
 
 class End(Action):
@@ -122,6 +131,9 @@ class End(Action):
         """
         Action par défaut, stoppe le joueur
         """
+
+        # Marque le joueur comme vainqueur
+        self.player.game.winner = self.player
 
         # Stoppe le joueur
         self.player.stopped = True
@@ -169,34 +181,25 @@ class Jail(Action):
     Le joueur qui délivre ne pend pas la place du joueur délivré.
     """
 
-    queue = dict[int, 'Jail']()
+    other_player_rescue = True
 
     def activate(self):
         """
-        Action sur plusieurs tours, lorsque le joueur arrive sur la case,
-        l'action vérifie si une action a déjà été créé pour cette case,
-        signifiant qu'un joueur en est déjà prisonnier.
         Garde le joueur prisonnier sinon.
         """
 
-        # Essaye de récupérer l'action à la position de la case
-        action: Jail = Jail.queue.get(self.tile.index)
+        # Stoppe le joueur
+        self.player.stopped = True
 
-        # Si l'action est inexistante
-        if action is None:
+    def rescue(self, player_: 'player.Player'):
+        """
+        Porte secours au joueur
+        """
 
-            # Ajoute l'action dans la queue des actions
-            Jail.queue[self.tile.index] = self
-            # Stoppe le joueur
-            self.player.stopped = True
-
-        # Si elle existe
-        else:
-
-            # Libère le joueur
-            action.player.stopped = False
-            # Supprime l'action
-            self.discard()
+        # Libère le joueur
+        self.player.stopped = False
+        # Supprime l'action
+        self.discard()
 
 
 class Maze(Action):
@@ -232,7 +235,7 @@ class Well(Action):
     Le joueur doit attendre qu'un autre joueur prenne sa place.
     """
 
-    queue = dict[int, 'Well']()
+    other_player_rescue = True
 
     def activate(self):
         """
@@ -243,26 +246,20 @@ class Well(Action):
         Garde le joueur prisonnier sinon.
         """
 
-        # Essaye de récupérer l'action à la position de la case
-        action: Well = Well.queue.get(self.tile.index)
+        # Stoppe le joueur
+        self.player.stopped = True
 
-        # Si l'action est inexistante
-        if action is None:
+    def rescue(self, player_: 'player.Player'):
+        """
+        Porte secours au joueur.
+        """
 
-            # Ajoute l'action dans la queue des actions
-            Well.queue[self.tile.index] = self
-            # Stoppe le joueur
-            self.player.stopped = True
-
-        # Si elle existe
-        else:
-
-            # Libère le joueur prisonnier
-            action.player.stopped = False
-            # Supprime l'ancienne action
-            action.discard()
-            # Emprisonne le joueur arrivant
-            self.player.stopped = True
+        # Libère le joueur prisonnier
+        self.player.stopped = False
+        # Extrait l'ancienne action des effets de l'ancien joueur et la stocke dans les effets du nouveau joueur
+        player_.add_effect(self.tile.name, self.discard())
+        # Emprisonne le joueur arrivant
+        self.activate()
 
 
 # Dictionnaire des actions par défaut
