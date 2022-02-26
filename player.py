@@ -57,7 +57,7 @@ class HeadUpDisplay:
         if self.player.game.enough_players():
             # Affiche à l'écran le tour du joueur
             self.app.screen.blit(
-                default_font.render(f"Au tour du Joueur {self.player.id}", True, '#FFFFFF', '#000000'),
+                default_font.render(f"Au tour du Joueur {self.player.id + 1}", True, '#FFFFFF', '#000000'),
                 (16, 16)
             )
         # Sinon
@@ -129,7 +129,7 @@ class Player(Savable):
         # Retourne l'action
         return action
 
-    def dice_move(self):
+    def dice_move(self) -> int:
         """
         Fait avancer le joueur en fonction des dés.
         """
@@ -149,13 +149,16 @@ class Player(Savable):
         # Fait avancer le joueur
         self.move_of(distance)
 
-    def discard_effect(self, name: str):
+        # Retourne la distance parcourue
+        return distance
+
+    def discard_effect(self, name: str) -> 'actions.Action':
         """
         Supprime l'effet du dictionnaire des effets du joueur, ainsi que de son HUD.
         """
 
         # Retire l'action du dictionnaire des effets
-        self.effects.pop(name, self)
+        return self.effects.pop(name, self)
 
     def move_of(self, distance: int):
         """
@@ -166,10 +169,18 @@ class Player(Savable):
         if not self.stopped and distance != 0:
             
             # Avancer
-            if not self.goose.move_of(distance):
+            if not self.goose.move_of(distance) and not self.stopped:
                 
                 # S'il est impossible d'avancer, reculer
                 self.goose.move_of(-distance)
+
+    def play(self):
+        """
+        Lance le tour du joueur.
+        """
+
+        # Fait avancer de la valeur des dés et vérifie si la distance parcourue n'est pas nulle
+        if self.dice_move() > 0:
 
             # Passe au tour suivant
             self.game.next_turn()
@@ -194,8 +205,8 @@ class Player(Savable):
             for dice in self.game.dices:
                 dice.update(event)
 
-            # Fait avancer le joueur
-            self.dice_move()
+            # Fait jouer le joueur
+            self.play()
 
         # Met à jour la position de l'oie
         tile = self.game.board.tiles.get(self.goose.position)

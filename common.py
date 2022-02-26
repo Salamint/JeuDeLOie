@@ -59,6 +59,7 @@ debug_font = pygame.font.SysFont("consolas", 20)
 default_font = pygame.font.Font(None, 30)
 tile_font = pygame.font.SysFont("consolas", 12)
 sans_font = pygame.font.SysFont("Comic Sans MS", 60)
+win_font = pygame.font.Font(None, 60)
 
 
 # Définition des fonctions

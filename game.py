@@ -131,8 +131,8 @@ class Game(Task, Savable):
 
         # Mode de jeu (multijoueur)
         self.multiplayer = multiplayer.SAME_MACHINE
-        # Groupe de sprites d'oies
-        self.geese = pygame.sprite.Group()
+        # Le gagnant de la partie
+        self.winner = None
 
         # L'état du jeu (en pause ou pas), attribut privé, accessible depuis les méthodes pause et resume
         self.paused = False
@@ -182,20 +182,26 @@ class Game(Task, Savable):
         if identifier < MAX_PLAYERS:
             p = player.Player(self, identifier, geese_colors[identifier])
             self.players.append(p)
-            self.geese.add(p.goose)
 
     def display(self):
         """
         Affiche les modifications sur l'écran.
         """
 
-        # Si aucune erreur n'a été levée
-        if self.error_message is None:
+        # Si une erreur n'a été levée
+        if self.error_message is not None:
+
+            # Affichage du message d'erreur
+            self.app.screen.blit(self.error_message.image, self.error_message.rect)
+
+        # Si aucune erreur a été levée
+        else:
 
             # Affiche le plateau de jeu
             self.board.display()
             # Affiche les oies
-            self.geese.draw(self.board.surface)
+            for player_ in self.players:
+                self.board.surface.blit(player_.goose.image, player_.goose.rect)
             # Affiche sur l'écran la surface du plateau
             self.app.screen.blit(self.board.surface, (64, 64))
             # Affiche les dés
@@ -204,11 +210,12 @@ class Game(Task, Savable):
             # Affiche l'affichage tête haute du joueur en train de jouer
             self.get_player().hud.display()
 
-        # Si une erreur a été levée
-        else:
+        # Si il y a un gagnant
+        if self.winner is not None:
 
-            # Affichage du message d'erreur
-            self.app.screen.blit(self.error_message.image, self.error_message.rect)
+            # Afficher la victoire à l'écran
+            text = win_font.render(f"Victoire du joueur {self.winner.id + 1}", True, '#FFFFFF', '#000000')
+            self.app.screen.blit(text, center_surface(text, self.app.screen))
 
         # Si le jeu est en pause
         if self.paused:
