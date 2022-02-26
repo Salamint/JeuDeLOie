@@ -18,7 +18,7 @@ class Goose(pygame.sprite.Sprite, Savable):
     Classe représentant l'oie que contrôle le joueur.
     """
 
-    def __init__(self, player_: 'player.Player', color: list or tuple):
+    def __init__(self, player_: 'player.Player', color: str or list or tuple):
         """
         Construit une nouvelle instance de la classe Goose représentant une oie.
         Une oie est associée à un joueur, possède une couleur, une position et d'autres attributs.
@@ -55,14 +55,23 @@ class Goose(pygame.sprite.Sprite, Savable):
     def __getstate__(self) -> dict: ...
 
     def __setstate__(self, state: dict): ...
-    
+
     def able_to_move(self, position: int) -> bool:
         """
         Retourne un booléen précisant si l'oie est en capacité de se déplacer,
         ou plus génériquement, si elle est en capacité de réaliser une action
         qui demande de stopper l'animation en cours.
         """
-        return not self.animating and not self.moving and 0 < position < self.player.game.board.size
+
+        # Stocke toutes les conditions
+        conditions = (
+            not self.animating,
+            not self.moving,
+            0 < position < self.player.game.board.size
+        )
+
+        # Vérifie que toutes les conditions sont vraies
+        return all(conditions)
 
     def change_color(self, new: str or tuple, old: str or tuple):
         """
@@ -75,37 +84,78 @@ class Goose(pygame.sprite.Sprite, Savable):
             for y in range(self.image.get_height()):
                 if self.image.get_at((x, y)) == old:
                     self.image.set_at((x, y), new)
-    
+
     def go_to(self, position: int):
         """
         Déplace l'oie à une position donnée, si elle est atteignable.
         """
+
+        # Permet de déterminer si le joueur a sauvé un autre joueur durant le calcul
+        rescued = False
+        # Permet de déterminer si le joueur a bougé
+        moved = False
+
+        # Si l'oie est capable de se déplacer sur la case à la position donnée
         if self.able_to_move(position):
-            self.last_position = self.position
-            self.position = position
-            tile = self.player.game.board.tiles.get(self.position)
-            tile.activate(self.position - self.last_position, self.player)
+
+            # Pour chaque joueur
+            for player_ in self.player.game.players:
+
+                # Si la position est déjà prise par un autre joueur
+                if player_.goose.position == position:
+
+                    # Pour chaque action du joueur
+                    for action in player_.effects.values():
+
+                        # Si l'action peut être désactivée par in autre joueur
+                        if action.other_player_rescue:
+
+                            # Envoyer des secours
+                            action.rescue(self.player)
+                            # Secourir le joueur
+                            rescued = True
+
+                    # Sauvegarde la dernière position du joueur
+                    current_last_position = self.last_position
+
+                    # Va à la dernière position du joueur
+                    self.last_position = self.position
+                    self.position = player_.goose.last_position
+
+                    # Indique que le joueur s'est déplacé
+                    moved = True
+
+                    # Si le joueur à sauvé un autre joueur
+                    if rescued:
+
+                        # Déplacer le joueur sauvé à la dernière position
+                        player_.goose.last_position = player_.goose.position
+                        player_.goose.position = current_last_position
+
+                    # Stoppe la boucle, il est inutile de continuer, il ne peut y avoir plus d'un joueur par case
+                    break
+
+            # Si le joueur ne s'est pas encore déplacé
+            if not moved:
+
+                # Sinon, va à la position de la case
+                self.last_position = self.position
+                self.position = position
+
+            # Si le joueur n'a sauvé personne
+            if not rescued:
+                # Récupère la case et l'active
+                tile = self.player.game.board.tiles.get(self.position)
+                tile.activate(self.position - self.last_position, self.player)
+
+            # Indique que l'opération a fonctionné
             return True
+
+        # Indique que l'opération a échoué
         return False
-    
+
     def move_of(self, tiles: int) -> bool:
         """
         Fait avancer l'oie d'un certain nombre de cases.
         """
         return self.go_to(self.position + tiles)
-    
-    def update(self, event: pygame.event.Event):
-        """
-        Met à jour l'oie (placement).
-        """
-
-        # todo : supprimer et remplacer par les jetés de dés
-        if event.type == pygame.KEYDOWN and self.player.stopped is False:
-            if event.key == pygame.K_LEFT:
-                self.move_of(-1)
-            elif event.key == pygame.K_RIGHT:
-                self.move_of(1)
-
-        tile = self.player.game.board.tiles.get(self.position)
-        self.rect.x = board.Tile.WIDTH * tile.x
-        self.rect.y = board.Tile.HEIGHT * tile.y
