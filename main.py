@@ -4,6 +4,8 @@ Ceci est un projet de NSI pour classe de Seconde Générale du lycée Ferdinand-
 """
 
 # Import de 'common.py'
+import pygame
+
 from common import *
 import game
 
@@ -164,7 +166,8 @@ class TitleScreen(Task):
 
         self.menu = pygame.sprite.Group()
         self.menu.add(
-            PushButton("Nouvelle Partie", button_size, (screen_width_center, 384), self.play),
+            PushButton("Nouvelle Partie", button_size, (screen_width_center, 288), self.play),
+            PushButton("Tutoriel", button_size, (screen_width_center, 384), self.tuto),
             PushButton("Charger", button_size, (screen_width_center, 480), self.save_select)
         )
 
@@ -261,7 +264,10 @@ class TitleScreen(Task):
             if os.path.isfile(path):
                 # Création et ajout d'un bouton chargeant le fichier
                 self.saves.add(
-                    PushButton(file, (256, 64), (0, height), lambda: self.load(path))
+                    PushButton(
+                        file, (256, 64), (0, height),
+                        lambda: print("Impossible de charger des parties dans cette version du jeu.")
+                    )
                 )
 
             # Incrémente la hauteur
@@ -269,6 +275,12 @@ class TitleScreen(Task):
 
         # Indique que le menu de sélection des sauvegardes est ouvert
         self.select = True
+
+    def tuto(self):
+        """
+        Lance le tutoriel
+        """
+        self.app.task = TutorialScreen(self.app)
 
     def update(self, event: pygame.event.Event):
         """
@@ -308,6 +320,79 @@ class TitleScreen(Task):
 
             # Met à jour les boutons principaux
             self.menu.update(event)
+
+
+class TutorialScreen(Task):
+    """
+    Classe représentant un tutoriel.
+    """
+
+    def __init__(self, app: 'Application'):
+        """
+        Construit une nouvelle instance de 'TutorialScreen' représentant un écran de tutoriel.
+        """
+
+        # Appel du constructeur de la classe parente
+        super().__init__(app)
+
+        # Les lignes du tutoriel
+        self.lines = list[pygame.Surface]()
+
+        # Tente de charger le fichier du tutoriel
+        try:
+            with open("tutorial.txt", "r", encoding="UTF-8") as file:
+                tutorial = file.readlines()
+
+        # Si une erreur survient
+        except FileNotFoundError or OSError:
+
+            # Afficher un message d'erreur
+            self.lines.append(
+                default_font.render("Le fichier du tutoriel n'a pas pu être chargé", True, '#FFFFFF', '#000000')
+            )
+
+        # Sinon, sauvegarder le message d'erreur
+        else:
+            for line in tutorial:
+                self.lines.append(
+                    default_font.render(line.replace("\n", ""), True, '#FFFFFF', '#000000')
+                )
+
+        # Ajouter un message pour quitter
+        self.lines.append(default_font.render("Appuyez sur une touche pour quitter...", True, '#FFFFFF', '#000000'))
+
+        # La surface à afficher pour éviter un calcul répétitif à chaque frame
+        self.surface = pygame.Surface(self.app.screen.get_size())
+
+        half_length = len(self.lines) // 2
+
+        # Affiche à l'écran le texte du tutoriel
+        for index, line in enumerate(self.lines):
+            self.surface.blit(
+                line,
+                (
+                    center_width(line.get_width(), self.surface.get_width()),
+                    (index * 20) - half_length * 20 + self.surface.get_height() // 2
+                )
+            )
+
+    def display(self):
+        """
+        Affiche à l'écran le tutoriel.
+        """
+
+        self.app.screen.blit(self.surface, (0, 0))
+
+    def update(self, event: pygame.event.Event):
+        """
+        Met à jour le tutoriel.
+        """
+
+        # Si une touche a été pressée
+        if event.type in (pygame.KEYDOWN, pygame.MOUSEBUTTONDOWN):
+
+            # Remettre la tâche par défaut
+            self.app.task = self.app.default_task(self.app)
 
 
 # Vérifie si ce fichier que ce fichier est exécuté et non importé.
