@@ -1,0 +1,27 @@
+Salut à toi jeune joueur / joueuse !
+
+
+Si tu désires jouer au jeu de l’oie, ce tutoriel te sera utile dans tes manœuvres !
+
+-Pour commencer une nouvelle partie, il t'est possible de choisir le mode de jeu
+dans lequel tu souhaites progresser.
+Clique sur Solo si tu souhaites jouer en solitaire, bien qu’il soit plus
+plaisant de jouer avec ses amis en multijoueur. Il vous suffira de cliquer
+sur le bouton multijoueur.
+
+-Si tu désires faire une pose au cours de votre partie,
+il t'est possible de stopper momentanément cette dernière en appuyant
+sur la touche échappe. Pour reprendre ta partie, réappuit sur la touche échappe.
+
+
+Le principe est simple :
+
+Le jeu de l’oie comporte 63 cases sur lesquelles entre 2 et 4 oies s’affrontent
+en essayant d’atteindre le plus vite possible la 63ème case.
+C’est en fonction d’un tirage par dé que les oies avancerons chaque tour.
+Mais le plateau comporte des cases spéciales accentuant le fil de la partie.
+
+
+Appuyer sur J pour rejoindre, appuyez sur L pour quitter,
+appuyez sur ESPACE pour lancer les dés.
+
