@@ -142,7 +142,10 @@ class Game(Task, Savable):
         buttons_x = center_width(buttons_size[0], self.app.screen.get_width())
         self.pause_menu.add(
             Button("Reprendre", buttons_size, (buttons_x, 192), self.resume),
-            Button("Sauvegarder", buttons_size, (buttons_x, 256), self.save),
+            Button(
+                "Sauvegarder", buttons_size, (buttons_x, 256),
+                lambda: print("Fonctionnalité pas encore opérationnelle.")
+            ),
             Button("Quitter", buttons_size, (buttons_x, 320), self.quit)
         )
 
