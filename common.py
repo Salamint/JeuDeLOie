@@ -31,7 +31,7 @@ pygame.font.init()
 # du package pygame.display par la suite.
 
 # Taille de l'écran
-screen_size = (850, 640)
+screen_size = (1050, 640)
 # Création de l'écran
 screen = pygame.display.set_mode(screen_size)
 

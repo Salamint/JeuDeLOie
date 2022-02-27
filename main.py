@@ -145,18 +145,13 @@ class TitleScreen(Task):
 
         # Images et surfaces de base.
         text = sans_font.render("Le Jeu De L'Oie", True, (255, 255, 255))
-        goose = pygame.image.load("assets/goose.png").convert_alpha()
+        goose = pygame.image.load("assets/tuto_2.png").convert_alpha()
 
         # Crée l'image du titre et le centre sur l'écran
-        title_size = (576, 64)
+        title_size = (1050, 600)
         self.title = pygame.Surface(title_size)
         self.title.blit(goose, (0, 0))
-        self.title.blit(text, (64, -16))
-        self.title.blit(goose, (title_size[0] - 64, 0))
-        self.title_position = (
-            center_width(title_size[0], self.app.screen.get_width()),
-            title_size[1]
-        )
+        self.title_position = (0, 0)
 
         # Menu principal et boutons
         button_size = (256, 64)
