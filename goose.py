@@ -91,9 +91,9 @@ class Goose(pygame.sprite.Sprite, Savable):
         """
 
         # Permet de déterminer si le joueur a sauvé un autre joueur durant le calcul
-        rescued = False
+        has_rescued = False
         # Permet de déterminer si le joueur a bougé
-        moved = False
+        has_moved = False
 
         # Si l'oie est capable de se déplacer sur la case à la position donnée
         if self.able_to_move(position):
@@ -104,16 +104,24 @@ class Goose(pygame.sprite.Sprite, Savable):
                 # Si la position est déjà prise par un autre joueur
                 if player_.goose.position == position:
 
+                    to_rescue: list[str] = []
+
                     # Pour chaque action du joueur
-                    for action in player_.effects.values():
+                    for name, action in player_.effects.items():
 
                         # Si l'action peut être désactivée par in autre joueur
                         if action.other_player_rescue:
 
-                            # Envoyer des secours
-                            action.rescue(self.player)
-                            # Secourir le joueur
-                            rescued = True
+                            # Ajoute le nom de l'action aux actions à sauver
+                            to_rescue.append(name)
+
+                    # Itère parmi les actions à sauver
+                    for action in to_rescue:
+
+                        # Envoyer des secours
+                        player_.effects.get(action).rescue(self.player)
+                        # Indique que le joueur à sauvé un autre joueur
+                        has_rescued = True
 
                     # Sauvegarde la dernière position du joueur
                     current_last_position = self.last_position
@@ -123,10 +131,10 @@ class Goose(pygame.sprite.Sprite, Savable):
                     self.position = player_.goose.last_position
 
                     # Indique que le joueur s'est déplacé
-                    moved = True
+                    has_moved = True
 
                     # Si le joueur à sauvé un autre joueur
-                    if rescued:
+                    if has_rescued:
 
                         # Déplacer le joueur sauvé à la dernière position
                         player_.goose.last_position = player_.goose.position
@@ -136,14 +144,14 @@ class Goose(pygame.sprite.Sprite, Savable):
                     break
 
             # Si le joueur ne s'est pas encore déplacé
-            if not moved:
+            if not has_moved:
 
                 # Sinon, va à la position de la case
                 self.last_position = self.position
                 self.position = position
 
             # Si le joueur n'a sauvé personne
-            if not rescued:
+            if not has_rescued:
                 # Récupère la case et l'active
                 tile = self.player.game.board.tiles.get(self.position)
                 tile.activate(self.position - self.last_position, self.player)

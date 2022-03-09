@@ -134,6 +134,12 @@ class Game(Task, Savable):
         # Le gagnant de la partie
         self.winner = None
 
+        # Surface sur laquelle sera affiché le message de fin
+        width, height = 384, 128
+        self.end_game_message = pygame.Surface((width, height))
+        self.end_game_message.fill('#FFFFFF')
+        self.end_game_message.fill('#000000', pygame.Rect(8, 8, width - 16, height - 16))
+
         # L'état du jeu (en pause ou pas), attribut privé, accessible depuis les méthodes pause et resume
         self.paused = False
         # Menu de pause
@@ -150,8 +156,8 @@ class Game(Task, Savable):
         )
 
         # Liste des joueurs
-        self.players = list[player.Player]()
-        self.player_cache = list[player.Player]()
+        self.players: list['player.Player'] = []
+        self.player_cache: list['player.Player'] = []
         # Tour de jeu
         self.turn = 0
         # Si un joueur est en train de jouer
@@ -217,8 +223,7 @@ class Game(Task, Savable):
         if self.winner is not None:
 
             # Afficher la victoire à l'écran
-            text = win_font.render(f"Victoire du joueur {self.winner.id + 1}", True, '#FFFFFF', '#000000')
-            self.app.screen.blit(text, center_surface(text, self.app.screen))
+            self.app.screen.blit(self.end_game_message, center_surface(self.end_game_message, self.app.screen))
 
         # Si le jeu est en pause
         if self.paused:
@@ -316,6 +321,15 @@ class Game(Task, Savable):
             # Met à jour les boutons de l'écran de pause
             self.pause_menu.update(event)
 
+        # Si le jeu a un vainqueur
+        elif self.winner is not None:
+
+            # Si la touche 'q' est pressée
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_q:
+
+                # Quitter le jeu
+                self.quit()
+
         # Si l'écran n'est pas en pause
         else:
 
@@ -356,3 +370,18 @@ class Game(Task, Savable):
 
             # Met à jour le joueur en train de jouer
             self.get_player().update(event)
+
+    def win(self, player_: 'player.Player'):
+        """
+        Méthode qui place un joueur en tant que vainqueur et crée un message de fin de partie.
+        """
+
+        # Qualifie le joueur
+        self.winner = player_
+
+        # Format le message
+        self.end_game_message.blit(
+            debug_font.render(f"Victoire du joueur {self.winner.id + 1} !", True, '#FFFFFF'), (24, 32)
+        )
+        self.end_game_message.blit(debug_font.render("Appuyez sur 'Q' pour quitter.", True, '#FFFFFF'), (24, 80))
+
