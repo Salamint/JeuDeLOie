@@ -133,7 +133,7 @@ class End(Action):
         """
 
         # Marque le joueur comme vainqueur
-        self.player.game.winner = self.player
+        self.player.game.win(self.player)
 
         # Stoppe le joueur
         self.player.stopped = True
@@ -213,7 +213,7 @@ class Maze(Action):
         """
 
         # Fait reculer le joueur
-        self.player.move_of(-12)
+        self.player.goose.move_of(-12)
 
 
 class Skull(Action):
